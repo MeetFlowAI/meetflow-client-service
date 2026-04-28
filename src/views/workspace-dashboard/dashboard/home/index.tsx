@@ -1,7 +1,7 @@
 /* Imports */
 import { useState, useEffect, useCallback, useContext, type JSX } from "react";
 import { useNavigate } from "react-router-dom";
-import { Hash, MessageCircle, Users } from "lucide-react";
+import { Hash, MessageCircle, Users, Mic, X, Bot } from "lucide-react";
 import clsx from "clsx";
 
 /* Local Imports */
@@ -22,15 +22,13 @@ import { getAllChannelsRequest } from "@/services/workspace-dashboard/channels";
 import { getWorkspaceMembersRequest } from "@/services/workspace-dashboard/members";
 import { typography } from "@/theme/typography";
 import { PAGE_WORKSPACE_DASHBOARD } from "@/routes/paths";
+import axiosConfig from "@/lib/axios";
 
 // ----------------------------------------------------------------------
 
 /**
  * WorkspaceHome — landing page of workspace dashboard.
- * Shows stat cards (channels count, members count) and quick links.
- * All data from real APIs.
- *
- * @component
+ * Shows enrollment banner (if not voice-enrolled), stat cards, and quick links.
  */
 const WorkspaceHome = (): JSX.Element => {
   const navigate = useNavigate();
@@ -40,6 +38,8 @@ const WorkspaceHome = (): JSX.Element => {
   const [channels, setChannels] = useState<any[]>([]);
   const [members, setMembers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [voiceEnrolled, setVoiceEnrolled] = useState<boolean | null>(null);
+  const [bannerDismissed, setBannerDismissed] = useState(false);
 
   /* Greeting */
   const hour = new Date().getHours();
@@ -63,6 +63,16 @@ const WorkspaceHome = (): JSX.Element => {
       }
       if (memRes.status === "fulfilled") {
         setMembers(memRes.value?.data ?? []);
+      }
+
+      // Check if current user is voice-enrolled in this workspace
+      try {
+        const meRes = await axiosConfig.get(
+          `/workspace/${selectedWorkspaceId}/members/me`,
+        );
+        setVoiceEnrolled(meRes.data?.data?.voice_enrolled ?? false);
+      } catch {
+        setVoiceEnrolled(false);
       }
     } finally {
       setLoading(false);
@@ -100,6 +110,9 @@ const WorkspaceHome = (): JSX.Element => {
     },
   ];
 
+  const showEnrollmentBanner =
+    !loading && voiceEnrolled === false && !bannerDismissed;
+
   return (
     <WorkspaceDashboardPage title="Home">
       <div className="flex flex-col gap-6 pb-4">
@@ -111,6 +124,62 @@ const WorkspaceHome = (): JSX.Element => {
               : "Here is your workspace overview"
           }
         />
+
+        {/* ── Voice Enrollment Banner ─────────────────────────────────────── */}
+        {showEnrollmentBanner && (
+          <div
+            className={clsx(
+              "flex items-start gap-4 p-4 rounded-xl",
+              "border border-primary-200 dark:border-primary-800/60",
+              "bg-primary-50 dark:bg-primary-900/10",
+            )}
+          >
+            <div className="h-10 w-10 rounded-xl bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center shrink-0">
+              <Bot className="h-5 w-5 text-primary-500" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p
+                className={clsx(
+                  typography.semibold14,
+                  "text-primary-700 dark:text-primary-300 mb-0.5",
+                )}
+              >
+                Set up voice recognition
+              </p>
+              <p
+                className={clsx(
+                  typography.regular14,
+                  "text-primary-600 dark:text-primary-400",
+                )}
+              >
+                Enroll your voice so the AI can identify you in meetings and
+                assign action items accurately.
+              </p>
+              <button
+                onClick={() =>
+                  navigate(
+                    PAGE_WORKSPACE_DASHBOARD.voiceEnrollment.absolutePath,
+                  )
+                }
+                className={clsx(
+                  "mt-2.5 inline-flex items-center gap-1.5 text-xs font-semibold",
+                  "px-3 py-1.5 rounded-lg",
+                  "bg-primary-500 hover:bg-primary-600 text-white transition-colors",
+                )}
+              >
+                <Mic className="h-3 w-3" />
+                Enroll Now — Takes 2 minutes
+              </button>
+            </div>
+            <button
+              onClick={() => setBannerDismissed(true)}
+              className="text-primary-400 hover:text-primary-600 transition-colors shrink-0"
+              aria-label="Dismiss"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        )}
 
         {/* Stat Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">

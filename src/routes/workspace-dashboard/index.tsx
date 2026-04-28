@@ -37,12 +37,22 @@ const ManageWorkspaceMembersPage = lazy(
 );
 const NotAllowedPage = lazy(() => import("@/views/page-not-allowed"));
 
+// ── AI Intelligence pages ─────────────────────────────────────────────────────
+const MeetingAIReviewPage = lazy(
+  () =>
+    import("@/views/workspace-dashboard/dashboard/meetings/MeetingAIReview"),
+);
+const MeetingAISummaryPage = lazy(
+  () =>
+    import("@/views/workspace-dashboard/dashboard/meetings/MeetingAISummary"),
+);
+const VoiceEnrollmentPage = lazy(
+  () =>
+    import("@/views/workspace-dashboard/dashboard/enrollment/VoiceEnrollment"),
+);
+
 // ----------------------------------------------------------------------
 
-/**
- * Workspace selection route — org-member workspace picker.
- * Wrapped in WorkspaceProvider so enterWorkspace() and context are available.
- */
 const getWorkspaceSelectionRoutes = (): Array<object> => [
   {
     path: PAGE_WORKSPACE_SELECTION.root.relativePath,
@@ -56,19 +66,6 @@ const getWorkspaceSelectionRoutes = (): Array<object> => [
   },
 ];
 
-/**
- * Workspace dashboard routes.
- * WorkspaceDashboardLayout internally wraps WorkspaceProvider.
- *
- * Routes:
- *   /workspace              → /workspace/home
- *   /workspace/home         → WorkspaceHomePage
- *   /workspace/channels     → ManageChannelsPage
- *   /workspace/channels/view/:id → ViewChannelPage
- *   /workspace/chats        → ManageChatsPage
- *   /workspace/chats/view/:id    → ViewChatPage
- *   /workspace/account      → MyProfilePage
- */
 const getWorkspaceDashboardRoutes = (): Array<object> => [
   {
     path: PAGE_WORKSPACE_DASHBOARD.root.relativePath,
@@ -115,6 +112,19 @@ const getWorkspaceDashboardRoutes = (): Array<object> => [
       {
         path: PAGE_WORKSPACE_DASHBOARD.members.relativePath,
         element: <ManageWorkspaceMembersPage />,
+      },
+      // ── AI Intelligence routes ──────────────────────────────────────────────
+      {
+        path: PAGE_WORKSPACE_DASHBOARD.aiReview.relativePath,
+        element: <MeetingAIReviewPage />,
+      },
+      {
+        path: PAGE_WORKSPACE_DASHBOARD.aiSummary.relativePath,
+        element: <MeetingAISummaryPage />,
+      },
+      {
+        path: PAGE_WORKSPACE_DASHBOARD.voiceEnrollment.relativePath,
+        element: <VoiceEnrollmentPage />,
       },
       { path: "*", element: <NotAllowedPage /> },
     ],

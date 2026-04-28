@@ -1,30 +1,34 @@
-/* Imports */
+/**
+ * layout/dashboard/workspace/index.tsx
+ */
+
 import React, { useState, useContext, type JSX } from "react";
 import { Outlet, Navigate } from "react-router-dom";
+import {
+  ResizablePanelGroup,
+  ResizablePanel,
+  ResizableHandle,
+} from "@/components/ui/resizable";
 
-/* Local Imports */
 import { WorkspaceProvider, useWorkspace } from "@/context/WorkspaceContext";
 import { StreamChatProvider } from "@/context/StreamChatContext";
 import SessionContext from "@/context/SessionContext";
 import { USER_ROLES } from "@/constants";
 import { PAGE_WORKSPACE_SELECTION } from "@/routes/paths";
-import WorkspaceTopbar from "./components/WorkspaceTopbar";
-import WorkspaceNavSidebar from "./components/WorkspaceNavSidebar";
-import WorkspaceListingPanel from "./components/WorkspaceListingPanel";
-import WorkspaceMainContent from "./components/WorkspaceMainContent";
+
+import WorkspaceTopbar from "./components/topbar/WorkspaceTopbar";
+import WorkspaceNavRail from "./components/nav-rail/WorkspaceNavRail";
+import WorkspaceListingPanel from "./components/listing-panel/WorkspaceListingPanel";
+import WorkspaceMainContent from "./components/main-content/WorkspaceMainContent";
 import CreateChannelModal from "@/views/workspace-dashboard/dashboard/channels/components/CreateChannelModal";
+import {
+  LISTING_PANEL_DEFAULT_SIZE,
+  LISTING_PANEL_MIN_SIZE,
+  LISTING_PANEL_MAX_SIZE,
+  // MAIN_PANEL_MAX_SIZE,
+  // MAIN_PANEL_MIN_SIZE,
+} from "./constants";
 
-// ----------------------------------------------------------------------
-
-export interface WorkspaceDashboardLayoutProps {
-  children?: React.ReactNode;
-}
-
-// ----------------------------------------------------------------------
-
-/**
- * Inner layout — needs WorkspaceProvider + StreamChatProvider already mounted above.
- */
 const WorkspaceLayoutInner: React.FC = (): JSX.Element => {
   const { selectedWorkspace, selectedWorkspaceId } = useWorkspace();
   const { user } = useContext(SessionContext);
@@ -38,37 +42,44 @@ const WorkspaceLayoutInner: React.FC = (): JSX.Element => {
 
   return (
     <>
-      <div className="flex flex-col h-screen w-screen overflow-hidden bg-secondary-50 dark:bg-secondary-900">
-        {/* ── TOPBAR ── */}
-        <WorkspaceTopbar />
+      <WorkspaceTopbar />
 
-        {/* ── BODY ── */}
-        <div
-          className="flex flex-1 overflow-hidden"
-          style={{ paddingTop: "56px" }}
+      <div
+        className="flex overflow-hidden mt-(--workspace-topbar-height)"
+        style={{ height: "calc(100dvh - var(--workspace-topbar-height))" }}
+      >
+        <WorkspaceNavRail />
+
+        <ResizablePanelGroup
+          orientation="horizontal"
+          className="flex-1 h-full min-w-0 rounded-lg border"
         >
-          {/* ── LEFT: nav + listing panel ── */}
-          <div
-            className="flex flex-col shrink-0 overflow-hidden border-r border-secondary-200 dark:border-secondary-700"
-            style={{ width: "30%" }}
+          <ResizablePanel
+            defaultSize={LISTING_PANEL_DEFAULT_SIZE}
+            // minSize={LISTING_PANEL_MIN_SIZE}
+            // maxSize={LISTING_PANEL_MAX_SIZE}
+            className="flex flex-col overflow-hidden border-r border-secondary-200 dark:border-secondary-800"
           >
-            <div className="flex flex-1 overflow-hidden">
-              <WorkspaceNavSidebar />
-              <div className="flex-1 overflow-hidden">
-                <WorkspaceListingPanel
-                  onCreateChannel={() => setCreateChannelOpen(true)}
-                />
-              </div>
-            </div>
-          </div>
+            <WorkspaceListingPanel
+              onCreateChannel={() => setCreateChannelOpen(true)}
+            />
+          </ResizablePanel>
 
-          {/* ── RIGHT: main content ── */}
-          <div className="flex-1 overflow-hidden bg-white dark:bg-secondary-800">
+          <ResizableHandle
+            withHandle
+            className="bg-secondary-200 dark:bg-secondary-800 hover:bg-primary-200 dark:hover:bg-primary-700/30 transition-colors"
+          />
+
+          <ResizablePanel
+            defaultSize={100 - LISTING_PANEL_DEFAULT_SIZE}
+            // minSize={MAIN_PANEL_MIN_SIZE}
+            // maxSize={MAIN_PANEL_MAX_SIZE}
+          >
             <WorkspaceMainContent>
               <Outlet />
             </WorkspaceMainContent>
-          </div>
-        </div>
+          </ResizablePanel>
+        </ResizablePanelGroup>
       </div>
 
       {selectedWorkspaceId && (
@@ -83,16 +94,10 @@ const WorkspaceLayoutInner: React.FC = (): JSX.Element => {
   );
 };
 
-// ----------------------------------------------------------------------
+export interface WorkspaceDashboardLayoutProps {
+  children?: React.ReactNode;
+}
 
-/**
- * WorkspaceDashboardLayout — mounts WorkspaceProvider then StreamChatProvider,
- * then renders the inner layout.
- *
- * StreamChatProvider connects to Stream Chat using the logged-in user's token.
- * It must be inside WorkspaceProvider (needs auth context) but outside the
- * inner layout so the client is shared across all workspace pages.
- */
 const WorkspaceDashboardLayout: React.FC<
   WorkspaceDashboardLayoutProps
 > = (): JSX.Element => (

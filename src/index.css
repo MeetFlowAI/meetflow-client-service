@@ -2,6 +2,9 @@
 @import "tw-animate-css";
 @import './assets/fonts/index.css';
 
+@import "stream-chat-react/dist/css/v2/index.css";
+@import './views/workspace-dashboard/dashboard/channels/components/chat/stream-chat-override.css';
+
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
@@ -220,6 +223,9 @@
     --information-300: #94BDF7;
     --information-200: #B9D6FC;
     --information-100: #DBECFD;
+
+    --workspace-topbar-height: 48px;
+    --workspace-nav-rail-width: 68px;
 
 }
 
