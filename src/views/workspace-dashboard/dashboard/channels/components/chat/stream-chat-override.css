@@ -1,0 +1,519 @@
+/*
+ * stream-chat-override.css
+ *
+ * Imported once in ChannelChat.tsx after stream-chat-react/dist/css/v2/index.css
+ *
+ * PURPOSE:
+ *  Stream's CSS gives us the flex layout skeleton for Window + Thread split.
+ *  This file overrides EVERY visual token Stream applies so our Tailwind
+ *  components take full control of appearance.
+ *
+ * SCOPE:
+ *  All rules are scoped under .slack-channel-chat so they never leak into
+ *  other Stream instances (DM chat, etc.) on the same page.
+ *
+ * DARK MODE:
+ *  Uses .dark prefix on <html> (set by your ThemeContext).
+ *  Stream's str-chat__theme-light is kept only for its layout role.
+ *
+ * REFERENCE:
+ *  Stream v13 DOM tree (Window open, Thread open):
+ *
+ *  .slack-channel-chat
+ *    .str-chat                            ← Chat root div
+ *      .str-chat__channel                 ← flex-row: main + thread
+ *        .str-chat__main-panel            ← flex-col: list + input (flex:1)
+ *          .str-chat__main-panel-inner
+ *            .str-chat__list              ← scrollable message list
+ *              .str-chat__ul
+ *                .str-chat__li            ← each message row
+ *            .str-chat__message-input     ← input wrapper
+ *              .str-chat__message-input-inner
+ *        .str-chat__thread                ← right panel (fixed 360px)
+ *          .str-chat__thread-container
+ *            .str-chat__thread-header
+ *            .str-chat__thread-list       ← scrollable thread messages
+ *            .str-chat__message-input     ← thread input wrapper
+ */
+
+/* ═══════════════════════════════════════════════════════════════════
+   1. ROOT — force full stretch, kill all backgrounds + borders
+   ═══════════════════════════════════════════════════════════════════ */
+
+.slack-channel-chat .str-chat,
+.slack-channel-chat .str-chat__channel,
+.slack-channel-chat .str-chat__main-panel,
+.slack-channel-chat .str-chat__main-panel-inner {
+  display: flex !important;
+  flex-direction: column !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  background: transparent !important;
+  border: none !important;
+  /* Critical: Stream sets max-width on .str-chat__channel — kill it */
+  max-width: unset !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+/* Channel = flex ROW (main panel LEFT + thread RIGHT) */
+.slack-channel-chat .str-chat__channel {
+  /* flex-direction: row !important; */
+  overflow: hidden !important;
+  align-items: stretch !important;
+}
+
+/* Main panel = flex COLUMN (list TOP + input BOTTOM) */
+.slack-channel-chat .str-chat__main-panel {
+  flex: 1 1 0% !important;
+  min-width: 0 !important;
+  overflow: hidden !important;
+}
+
+.slack-channel-chat .str-chat__main-panel-inner {
+  flex: 1 1 0% !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   2. MESSAGE LIST — full width, fills all available height
+   ═══════════════════════════════════════════════════════════════════ */
+
+.slack-channel-chat .str-chat__list,
+.slack-channel-chat .str-chat__virtual-list {
+  flex: 1 1 0% !important;
+  width: 100% !important;
+  height: 100% !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  background: transparent !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+.slack-channel-chat .str-chat__ul {
+  list-style: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  /* Small bottom gap so last message isn't flush with input */
+  padding-bottom: 8px !important;
+  width: 100% !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   3. MESSAGE ROW — zero Stream chrome, full width
+   ═══════════════════════════════════════════════════════════════════ */
+
+.slack-channel-chat .str-chat__li {
+  width: 100% !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  list-style: none !important;
+  border: none !important;
+  background: transparent !important;
+}
+
+.slack-channel-chat .str-chat__message,
+.slack-channel-chat .str-chat__message-simple {
+  width: 100% !important;
+  max-width: 100% !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  border: none !important;
+}
+
+/* Every layer Stream wraps around message content — flatten all */
+.slack-channel-chat .str-chat__message-inner,
+.slack-channel-chat .str-chat__message-bubble,
+.slack-channel-chat .str-chat__message-text,
+.slack-channel-chat .str-chat__message-text-inner {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  max-width: 100% !important;
+  width: 100% !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   4. STREAM HEADER — hidden (we use our own ChannelHeader above)
+   ═══════════════════════════════════════════════════════════════════ */
+
+.slack-channel-chat .str-chat__channel-header {
+  display: none !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   5. MESSAGE INPUT WRAPPERS — fully neutralised
+      SlackMessageInput / SlackThreadInput control all styling.
+   ═══════════════════════════════════════════════════════════════════ */
+
+.slack-channel-chat .str-chat__message-input {
+  width: 100% !important;
+  background: transparent !important;
+  padding: 0 !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.slack-channel-chat .str-chat__message-input-inner {
+  width: 100% !important;
+  background: transparent !important;
+  padding: 0 !important;
+  border: none !important;
+  box-shadow: none !important;
+  /* Block so SlackMessageInput fills 100% width */
+  display: block !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   6. DATE SEPARATOR — Slack-style horizontal rule with pill label
+   ═══════════════════════════════════════════════════════════════════ */
+
+.slack-channel-chat .str-chat__date-separator {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  padding: 16px 20px 8px 20px !important;
+  margin: 0 !important;
+}
+
+.slack-channel-chat .str-chat__date-separator-line {
+  flex: 1 !important;
+  height: 1px !important;
+  background: rgb(229 229 236) !important;
+  border: none !important;
+}
+
+.dark .slack-channel-chat .str-chat__date-separator-line {
+  background: rgb(50 50 58) !important;
+}
+
+.slack-channel-chat .str-chat__date-separator-date {
+  flex-shrink: 0 !important;
+  background: white !important;
+  border: 1px solid rgb(229 229 236) !important;
+  border-radius: 9999px !important;
+  padding: 2px 12px !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  line-height: 1.6 !important;
+  color: rgb(91 90 100) !important;
+  white-space: nowrap !important;
+  letter-spacing: 0.01em !important;
+}
+
+.dark .slack-channel-chat .str-chat__date-separator-date {
+  background: rgb(17 17 19) !important;
+  border-color: rgb(50 50 58) !important;
+  color: rgb(150 150 160) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   7. UNREAD SEPARATOR
+   ═══════════════════════════════════════════════════════════════════ */
+
+.slack-channel-chat .str-chat__unread-messages-separator {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  padding: 4px 20px !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  color: rgb(220 60 60) !important;
+}
+
+.slack-channel-chat .str-chat__unread-messages-separator::before,
+.slack-channel-chat .str-chat__unread-messages-separator::after {
+  content: "" !important;
+  flex: 1 !important;
+  height: 1px !important;
+  background: rgb(220 60 60) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   8. THREAD PANEL — Slack-faithful 360px right panel
+   ═══════════════════════════════════════════════════════════════════ */
+
+.slack-channel-chat .str-chat__thread {
+  display: flex !important;
+  flex-direction: column !important;
+  /* Fixed width — matches Slack's thread panel */
+  width: 360px !important;
+  min-width: 360px !important;
+  max-width: 360px !important;
+  height: 100% !important;
+  background: white !important;
+  border-left: 1px solid rgb(229 229 236) !important;
+  flex-shrink: 0 !important;
+  overflow: hidden !important;
+}
+
+.dark .slack-channel-chat .str-chat__thread {
+  background: rgb(17 17 19) !important;
+  border-left-color: rgb(50 50 58) !important;
+}
+
+.slack-channel-chat .str-chat__thread-container {
+  display: flex !important;
+  flex-direction: column !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  background: transparent !important;
+  overflow: hidden !important;
+}
+
+/* Thread header: "Thread" title + "#channel-name" subtitle + × button */
+.slack-channel-chat .str-chat__thread-header {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  padding: 16px 16px 12px 16px !important;
+  border-bottom: 1px solid rgb(229 229 236) !important;
+  background: transparent !important;
+  flex-shrink: 0 !important;
+}
+
+.dark .slack-channel-chat .str-chat__thread-header {
+  border-bottom-color: rgb(50 50 58) !important;
+}
+
+/* "Thread" heading */
+.slack-channel-chat .str-chat__thread-header-title {
+  font-size: 17px !important;
+  font-weight: 900 !important;
+  color: rgb(17 17 19) !important;
+  letter-spacing: -0.01em !important;
+}
+
+.dark .slack-channel-chat .str-chat__thread-header-title {
+  color: rgb(240 240 244) !important;
+}
+
+/* "#mockups" subtitle */
+.slack-channel-chat .str-chat__thread-header-subtitle {
+  font-size: 12px !important;
+  color: rgb(110 108 122) !important;
+  margin-top: 1px !important;
+}
+
+.dark .slack-channel-chat .str-chat__thread-header-subtitle {
+  color: rgb(150 150 160) !important;
+}
+
+/* × close button */
+.slack-channel-chat .str-chat__thread-header-close-button {
+  width: 30px !important;
+  height: 30px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border-radius: 6px !important;
+  border: none !important;
+  background: transparent !important;
+  cursor: pointer !important;
+  color: rgb(110 108 122) !important;
+  font-size: 18px !important;
+  transition: background 0.12s !important;
+  flex-shrink: 0 !important;
+}
+
+.slack-channel-chat .str-chat__thread-header-close-button:hover {
+  background: rgb(243 243 246) !important;
+  color: rgb(17 17 19) !important;
+}
+
+.dark .slack-channel-chat .str-chat__thread-header-close-button:hover {
+  background: rgb(37 37 42) !important;
+  color: rgb(240 240 244) !important;
+}
+
+/* Thread message list — scrollable, fills remaining height */
+.slack-channel-chat .str-chat__thread-list {
+  flex: 1 1 0% !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  background: transparent !important;
+  padding: 0 !important;
+  min-height: 0 !important;
+}
+
+/* Thread input wrapper — pinned to bottom, no extra padding
+   (SlackThreadInput adds its own px-3 pb-3) */
+.slack-channel-chat .str-chat__thread .str-chat__message-input {
+  flex-shrink: 0 !important;
+  padding: 0 !important;
+  background: transparent !important;
+  border: none !important;
+}
+
+.slack-channel-chat .str-chat__thread .str-chat__message-input-inner {
+  padding: 0 !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   9. MESSAGE ACTIONS TOOLTIP (Stream's default hover menu)
+      Overridden here in case any Stream default menu appears.
+   ═══════════════════════════════════════════════════════════════════ */
+
+.slack-channel-chat .str-chat__message-actions-box {
+  background: white !important;
+  border: 1px solid rgb(229 229 236) !important;
+  border-radius: 10px !important;
+  box-shadow: 0 2px 12px rgb(0 0 0 / 0.10) !important;
+  padding: 4px !important;
+}
+
+.dark .slack-channel-chat .str-chat__message-actions-box {
+  background: rgb(28 28 33) !important;
+  border-color: rgb(50 50 58) !important;
+}
+
+.slack-channel-chat .str-chat__message-actions-box-button {
+  font-size: 13px !important;
+  color: rgb(91 90 100) !important;
+  border-radius: 6px !important;
+  padding: 5px 10px !important;
+  width: 100% !important;
+  text-align: left !important;
+  background: transparent !important;
+  border: none !important;
+  cursor: pointer !important;
+  transition: background 0.1s !important;
+}
+
+.slack-channel-chat .str-chat__message-actions-box-button:hover {
+  background: rgb(243 243 246) !important;
+  color: rgb(17 17 19) !important;
+}
+
+.dark .slack-channel-chat .str-chat__message-actions-box-button:hover {
+  background: rgb(37 37 42) !important;
+  color: rgb(240 240 244) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   10. REACTIONS
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* Reaction picker flyout */
+.slack-channel-chat .str-chat__message-reactions-list {
+  background: white !important;
+  border: 1px solid rgb(229 229 236) !important;
+  border-radius: 10px !important;
+  box-shadow: 0 4px 16px rgb(0 0 0 / 0.10) !important;
+  padding: 6px !important;
+  z-index: 50 !important;
+}
+
+.dark .slack-channel-chat .str-chat__message-reactions-list {
+  background: rgb(28 28 33) !important;
+  border-color: rgb(50 50 58) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   11. EMOJI PICKER
+   ═══════════════════════════════════════════════════════════════════ */
+
+.slack-channel-chat .str-chat__emoji-picker-container {
+  z-index: 50 !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   12. ATTACHMENTS
+   ═══════════════════════════════════════════════════════════════════ */
+
+.slack-channel-chat .str-chat__attachment-list {
+  background: transparent !important;
+  padding: 0 !important;
+}
+
+.slack-channel-chat .str-chat__attachment-card {
+  background: rgb(249 249 251) !important;
+  border: 1px solid rgb(229 229 236) !important;
+  border-radius: 8px !important;
+  overflow: hidden !important;
+  max-width: 400px !important;
+}
+
+.dark .slack-channel-chat .str-chat__attachment-card {
+  background: rgb(28 28 33) !important;
+  border-color: rgb(50 50 58) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   13. LOADING INDICATOR
+   ═══════════════════════════════════════════════════════════════════ */
+
+.slack-channel-chat .str-chat__loading-indicator,
+.slack-channel-chat .str-chat__loading-indicator-container {
+  background: transparent !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   14. SCROLLBARS — thin, unobtrusive
+   ═══════════════════════════════════════════════════════════════════ */
+
+.slack-channel-chat .str-chat__list::-webkit-scrollbar,
+.slack-channel-chat .str-chat__virtual-list::-webkit-scrollbar,
+.slack-channel-chat .str-chat__thread-list::-webkit-scrollbar {
+  width: 5px;
+}
+
+.slack-channel-chat .str-chat__list::-webkit-scrollbar-track,
+.slack-channel-chat .str-chat__virtual-list::-webkit-scrollbar-track,
+.slack-channel-chat .str-chat__thread-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.slack-channel-chat .str-chat__list::-webkit-scrollbar-thumb,
+.slack-channel-chat .str-chat__virtual-list::-webkit-scrollbar-thumb,
+.slack-channel-chat .str-chat__thread-list::-webkit-scrollbar-thumb {
+  background: rgb(210 210 222);
+  border-radius: 9999px;
+}
+
+.dark .slack-channel-chat .str-chat__list::-webkit-scrollbar-thumb,
+.dark .slack-channel-chat .str-chat__virtual-list::-webkit-scrollbar-thumb,
+.dark .slack-channel-chat .str-chat__thread-list::-webkit-scrollbar-thumb {
+  background: rgb(55 55 65);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   15. MISC — kill any Stream remnants
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* Stream sometimes adds a bottom bar below MessageInput */
+.slack-channel-chat .str-chat__footer {
+  display: none !important;
+}
+
+/* Stream's typing indicator */
+.slack-channel-chat .str-chat__typing-indicator {
+  background: transparent !important;
+  padding: 0 20px 4px !important;
+  font-size: 12px !important;
+  color: rgb(110 108 122) !important;
+  min-height: 20px !important;
+}
+
+/* Stream's "Jump to latest" button */
+.slack-channel-chat .str-chat__jump-to-latest-message {
+  background: white !important;
+  border: 1px solid rgb(229 229 236) !important;
+  border-radius: 9999px !important;
+  box-shadow: 0 2px 8px rgb(0 0 0 / 0.10) !important;
+  color: rgb(17 17 19) !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+}
+
+.dark .slack-channel-chat .str-chat__jump-to-latest-message {
+  background: rgb(28 28 33) !important;
+  border-color: rgb(50 50 58) !important;
+  color: rgb(240 240 244) !important;
+}

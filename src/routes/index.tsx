@@ -9,7 +9,6 @@ import getMasterDashboardRoutes from "./master-dashboard";
 import getOrganizationDashboardRoutes from "./organization-dashboard";
 import { USER_ROLES } from "@/constants";
 import SessionContext from "@/context/SessionContext";
-import { SpinnerLoader } from "@/components/loader/InlineLoader";
 import {
   getWorkspaceDashboardRoutes,
   getWorkspaceSelectionRoutes,
@@ -60,7 +59,8 @@ const Routing: React.FC = (): JSX.Element => {
     <Suspense
       fallback={
         <div className="w-screen h-screen flex items-center justify-center">
-          <SpinnerLoader />
+          {/* <SpinnerLoader /> */}
+          <FullScreenLoader variant="gradient" />
         </div>
       }
     >

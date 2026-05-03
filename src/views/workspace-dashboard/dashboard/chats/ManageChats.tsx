@@ -1,8 +1,20 @@
-/* Imports */
-import { useState, useEffect, useCallback, useContext, type JSX } from "react";
+/**
+ * views/workspace-dashboard/dashboard/chats/ManageChats.tsx
+ *
+ * Full-page DM member picker — rendered at /workspace/chats.
+ *
+ * Changes from original:
+ *  - Migrated from raw useEffect+useState to TanStack Query
+ *    (shares ["workspace-members", workspaceId] cache with ChatsPanel)
+ *  - No functional changes — same layout, same navigation behaviour
+ *  - Minor: removed redundant AVATAR_COLORS in favour of deterministic fn
+ */
+
+import { useContext, useState, type JSX } from "react";
 import { useNavigate } from "react-router-dom";
 import { MessageCircle, Users } from "lucide-react";
 import clsx from "clsx";
+import { useQuery } from "@tanstack/react-query";
 
 /* Local Imports */
 import WorkspaceDashboardPage from "@/components/page/dashboard/workspace";
@@ -17,89 +29,94 @@ import { Badge } from "@/components/ui/badge";
 import SessionContext from "@/context/SessionContext";
 import { useWorkspace } from "@/context/WorkspaceContext";
 import { getWorkspaceMembersRequest } from "@/services/workspace-dashboard/members";
-import Toast from "@/components/toast";
 import { typography } from "@/theme/typography";
 import { PAGE_WORKSPACE_DASHBOARD } from "@/routes/paths";
 
 // ----------------------------------------------------------------------
 
+const AVATAR_PALETTE = [
+  "#7C3AED",
+  "#059669",
+  "#2563EB",
+  "#DB2777",
+  "#D97706",
+  "#0891B2",
+  "#E11D48",
+  "#4F46E5",
+  "#7C3AED",
+  "#059669",
+];
+function getAvatarColor(id: number): string {
+  return AVATAR_PALETTE[id % AVATAR_PALETTE.length];
+}
+
 const SORT_OPTIONS: SortOption[] = [{ value: "name", label: "Name" }];
 
-const AVATAR_COLORS = [
-  "bg-violet-500",
-  "bg-emerald-500",
-  "bg-blue-500",
-  "bg-pink-500",
-  "bg-amber-500",
-  "bg-cyan-500",
-  "bg-rose-500",
-  "bg-teal-500",
-  "bg-indigo-500",
-];
+// ── Skeleton row ──────────────────────────────────────────────────────
+
+const SkeletonRow = () => (
+  <div className="animate-pulse flex items-center gap-4 p-4 rounded-2xl border border-secondary-100 dark:border-secondary-800 bg-white dark:bg-secondary-800">
+    <div className="h-11 w-11 rounded-full bg-secondary-200 dark:bg-secondary-700 shrink-0" />
+    <div className="flex-1 space-y-2">
+      <div className="h-3.5 bg-secondary-200 dark:bg-secondary-700 rounded w-1/3" />
+      <div className="h-3 bg-secondary-100 dark:bg-secondary-700/50 rounded w-1/4" />
+    </div>
+  </div>
+);
 
 // ----------------------------------------------------------------------
 
-/**
- * ManageChats — lists workspace members to start / view DMs.
- * "Chats" in this workspace = DMs with workspace members.
- *
- * @component
- */
 const ManageChats = (): JSX.Element => {
   const navigate = useNavigate();
   const { user } = useContext(SessionContext);
   const { selectedWorkspaceId } = useWorkspace();
 
-  const [members, setMembers] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [sortBy, setSortBy] = useState<string | undefined>(undefined);
 
-  const fetchMembers = useCallback(async () => {
-    if (!selectedWorkspaceId) return;
-    setLoading(true);
-    try {
-      const res = await getWorkspaceMembersRequest(selectedWorkspaceId);
-      const data = res?.data ?? [];
-      setMembers(data);
-    } catch (err: any) {
-      Toast.error({
-        message: "Failed to load team members",
-        description: err?.message,
-      });
-    } finally {
-      setLoading(false);
-    }
-  }, [selectedWorkspaceId]);
+  // ── Data — shared TanStack Query cache ────────────────────────────────
+  const {
+    data: membersData,
+    isLoading,
+    refetch,
+  } = useQuery({
+    queryKey: ["workspace-members", selectedWorkspaceId],
+    queryFn: () => getWorkspaceMembersRequest(selectedWorkspaceId!),
+    enabled: !!selectedWorkspaceId,
+    staleTime: 60_000,
+    select: (res) => (res?.data ?? []) as any[],
+  });
 
-  useEffect(() => {
-    fetchMembers();
-  }, [fetchMembers]);
+  const allMembers = membersData ?? [];
 
-  const getName = (m: any) =>
-    `${m.member?.first_name ?? ""} ${m.member?.last_name ?? ""}`.trim();
+  // Exclude self
+  const others = allMembers.filter((m: any) => m.member?.id !== user?.id);
 
-  /* Exclude self */
-  let filtered = members
-    .filter((m) => m.member?.id !== user?.id)
-    .filter((m) => getName(m).toLowerCase().includes(search.toLowerCase()));
+  // Filter + sort
+  let filtered = others.filter((m: any) => {
+    const name =
+      `${m.member?.first_name ?? ""} ${m.member?.last_name ?? ""}`.toLowerCase();
+    return !search || name.includes(search.toLowerCase());
+  });
 
   if (sortBy === "name") {
-    filtered = [...filtered].sort((a, b) =>
-      getName(a).localeCompare(getName(b)),
-    );
+    filtered = [...filtered].sort((a: any, b: any) => {
+      const na = `${a.member?.first_name ?? ""} ${a.member?.last_name ?? ""}`;
+      const nb = `${b.member?.first_name ?? ""} ${b.member?.last_name ?? ""}`;
+      return na.localeCompare(nb);
+    });
   }
 
-  const onlineCount = members.filter((m) => m.member?.is_active).length;
-  const offlineCount = members.filter((m) => !m.member?.is_active).length;
+  const onlineCount = others.filter((m: any) => m.member?.is_active).length;
+  const offlineCount = others.filter((m: any) => !m.member?.is_active).length;
 
   const statCards: SectionCard[] = [
     {
-      label: "Total Members",
-      value: members.length,
+      label: "Team Members",
+      value: others.length,
       icon: Users,
       color: "primary",
-      hint: "Workspace members",
+      hint: "People you can message",
     },
     {
       label: "Online",
@@ -125,7 +142,7 @@ const ManageChats = (): JSX.Element => {
           subtitle="Message your workspace team members"
         />
 
-        <SectionCards cards={statCards} isLoading={loading} />
+        <SectionCards cards={statCards} isLoading={isLoading} />
 
         <SectionActions
           searchValue={search}
@@ -134,36 +151,27 @@ const ManageChats = (): JSX.Element => {
           sortOptions={SORT_OPTIONS}
           sortValue={sortBy}
           onSortChange={setSortBy}
-          onRefresh={fetchMembers}
+          onRefresh={refetch}
         />
 
         <div className="flex flex-col gap-2">
-          {loading &&
-            [1, 2, 3, 4].map((i) => (
-              <div
-                key={i}
-                className="animate-pulse flex items-center gap-4 p-4 rounded-2xl border border-secondary-100 dark:border-secondary-700 bg-white dark:bg-secondary-800"
-              >
-                <div className="h-11 w-11 rounded-full bg-secondary-200 dark:bg-secondary-700 shrink-0" />
-                <div className="flex-1 space-y-2">
-                  <div className="h-3.5 bg-secondary-200 dark:bg-secondary-700 rounded w-1/3" />
-                  <div className="h-3 bg-secondary-100 dark:bg-secondary-700/50 rounded w-1/4" />
-                </div>
-              </div>
-            ))}
+          {/* Loading skeletons */}
+          {isLoading && [1, 2, 3, 4].map((i) => <SkeletonRow key={i} />)}
 
-          {!loading &&
-            filtered.map((member, idx) => {
+          {/* Member list */}
+          {!isLoading &&
+            filtered.map((member: any) => {
               const u = member.member;
-              const name = getName(member);
+              const name =
+                `${u?.first_name ?? ""} ${u?.last_name ?? ""}`.trim();
               const initials =
                 `${u?.first_name?.[0] ?? ""}${u?.last_name?.[0] ?? ""}`.toUpperCase();
-              const avatarColor = AVATAR_COLORS[idx % AVATAR_COLORS.length];
+              const avatarColor = getAvatarColor(u?.id ?? 0);
               const isOnline = u?.is_active ?? false;
 
               return (
                 <button
-                  key={member.id}
+                  key={member.id ?? u?.id}
                   onClick={() =>
                     navigate(
                       PAGE_WORKSPACE_DASHBOARD.chats.view.absolutePath.replace(
@@ -173,42 +181,47 @@ const ManageChats = (): JSX.Element => {
                     )
                   }
                   className={clsx(
-                    "flex items-center gap-4 p-4 rounded-2xl border cursor-pointer transition-all duration-200 text-left",
-                    "border-secondary-100 dark:border-secondary-700 bg-white dark:bg-secondary-800",
+                    "flex items-center gap-4 p-4 rounded-2xl border cursor-pointer",
+                    "transition-all duration-200 text-left",
+                    "border-secondary-100 dark:border-secondary-800",
+                    "bg-white dark:bg-secondary-800",
                     "hover:border-primary-200 dark:hover:border-primary-800 hover:shadow-sm",
                   )}
                 >
+                  {/* Avatar + presence */}
                   <div className="relative shrink-0">
                     <div
-                      className={clsx(
-                        "h-11 w-11 rounded-full flex items-center justify-center text-white font-semibold",
-                        avatarColor,
-                      )}
+                      className="h-11 w-11 rounded-full flex items-center justify-center text-white font-semibold"
+                      style={{ backgroundColor: avatarColor }}
                     >
-                      {initials}
+                      {initials || "?"}
                     </div>
                     <span
                       className={clsx(
-                        "absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-white dark:border-secondary-800",
-                        isOnline ? "bg-green-400" : "bg-secondary-400",
+                        "absolute bottom-0 right-0 h-3 w-3 rounded-full",
+                        "border-2 border-white dark:border-secondary-800",
+                        isOnline
+                          ? "bg-emerald-400"
+                          : "bg-secondary-300 dark:bg-secondary-600",
                       )}
                     />
                   </div>
 
+                  {/* Name + badge */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       <h3
                         className={clsx(
                           typography.semibold14,
-                          "text-secondary-800 dark:text-secondary-100",
+                          "text-secondary-800 dark:text-secondary-100 truncate",
                         )}
                       >
-                        {name}
+                        {name || "Unknown"}
                       </h3>
                       <Badge
                         variant="outline"
                         className={clsx(
-                          "border-0 text-[10px] px-1.5 py-0.5",
+                          "shrink-0 border-0 text-[10px] px-1.5 py-0.5",
                           isOnline
                             ? "bg-success-100 text-success-700 dark:bg-success-900/20 dark:text-success-400"
                             : "bg-secondary-100 text-secondary-500 dark:bg-secondary-700 dark:text-secondary-400",
@@ -234,7 +247,8 @@ const ManageChats = (): JSX.Element => {
               );
             })}
 
-          {!loading && filtered.length === 0 && (
+          {/* Empty state */}
+          {!isLoading && filtered.length === 0 && (
             <div className="flex flex-col items-center justify-center py-16 text-center">
               <MessageCircle className="h-12 w-12 text-secondary-300 dark:text-secondary-600 mb-3" />
               <p className={clsx(typography.semibold14, "text-secondary-500")}>

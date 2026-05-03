@@ -217,6 +217,19 @@ export const PAGE_WORKSPACE_DASHBOARD = {
     relativePath: "members",
     absolutePath: `/${ROOT_WORKSPACE_DASHBOARD}/members`,
   },
+  // ── AI Intelligence ────────────────────────────────────────────────────────
+  aiReview: {
+    relativePath: "channels/:channelId/meetings/:meetingId/review",
+    absolutePath: `/${ROOT_WORKSPACE_DASHBOARD}/channels/:channelId/meetings/:meetingId/review`,
+  },
+  aiSummary: {
+    relativePath: "channels/:channelId/meetings/:meetingId/summary",
+    absolutePath: `/${ROOT_WORKSPACE_DASHBOARD}/channels/:channelId/meetings/:meetingId/summary`,
+  },
+  voiceEnrollment: {
+    relativePath: "enroll-voice",
+    absolutePath: `/${ROOT_WORKSPACE_DASHBOARD}/enroll-voice`,
+  },
 };
 
 /* Workspace Selection Page (org-member landing) */

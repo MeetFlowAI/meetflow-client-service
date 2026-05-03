@@ -1,0 +1,223 @@
+/**
+ * meeting.css — MeetFlow Meeting Module Design System
+ *
+ * Token strategy:
+ *  - [data-meeting] scope → always dark (video UI standard, better contrast)
+ *  - [data-prejoin]  scope → theme-aware (respects .dark/.light class)
+ *
+ * All components inside meetings use --mf-* tokens only.
+ * Zero hardcoded hex values in component JSX.
+ */
+
+/* ────────────────────────────────────────────────────────────────────────────
+   MEETING ROOM — always dark regardless of app theme
+   ──────────────────────────────────────────────────────────────────────────── */
+
+[data-meeting] {
+  /* Backgrounds */
+  --mf-bg-base:        #09090e;
+  --mf-bg-raised:      #111118;
+  --mf-bg-surface:     #18181f;
+  --mf-bg-elevated:    #202029;
+  --mf-bg-overlay:     rgba(9,9,14,0.80);
+  --mf-bg-glass:       rgba(18,18,26,0.75);
+
+  /* Tile */
+  --mf-tile-bg:        #1a1a23;
+  --mf-tile-hover:     #20202c;
+
+  /* Text */
+  --mf-text-primary:   rgba(255,255,255,0.93);
+  --mf-text-secondary: rgba(255,255,255,0.52);
+  --mf-text-muted:     rgba(255,255,255,0.26);
+  --mf-text-disabled:  rgba(255,255,255,0.14);
+
+  /* Borders */
+  --mf-border:         rgba(255,255,255,0.07);
+  --mf-border-medium:  rgba(255,255,255,0.12);
+  --mf-border-strong:  rgba(255,255,255,0.20);
+
+  /* Accent (brand purple — same in both themes) */
+  --mf-accent:         #4D41F3;
+  --mf-accent-hover:   #443AE0;
+  --mf-accent-muted:   rgba(77,65,243,0.18);
+  --mf-accent-subtle:  rgba(77,65,243,0.10);
+  --mf-accent-glow:    rgba(77,65,243,0.35);
+  --mf-accent-text:    #796FF7;
+
+  /* Status */
+  --mf-success:        #34d399;
+  --mf-success-muted:  rgba(52,211,153,0.15);
+  --mf-success-glow:   rgba(52,211,153,0.40);
+
+  --mf-warning:        #fbbf24;
+  --mf-warning-muted:  rgba(251,191,36,0.14);
+
+  --mf-danger:         #f87171;
+  --mf-danger-strong:  #ef4444;
+  --mf-danger-muted:   rgba(239,68,68,0.16);
+
+  /* Shadows */
+  --mf-shadow-sm:      0 2px 8px rgba(0,0,0,0.35);
+  --mf-shadow-md:      0 4px 20px rgba(0,0,0,0.50);
+  --mf-shadow-lg:      0 8px 40px rgba(0,0,0,0.65);
+  --mf-shadow-accent:  0 4px 24px rgba(77,65,243,0.28);
+
+  /* Control bar */
+  --mf-ctrl-bg:        rgba(12,12,18,0.92);
+  --mf-ctrl-btn:       rgba(255,255,255,0.07);
+  --mf-ctrl-btn-hover: rgba(255,255,255,0.13);
+  --mf-ctrl-btn-active:rgba(255,255,255,0.17);
+
+  /* Radius */
+  --mf-radius-sm:      8px;
+  --mf-radius-md:      12px;
+  --mf-radius-lg:      16px;
+  --mf-radius-xl:      20px;
+  --mf-radius-tile:    18px;
+  --mf-radius-panel:   0px; /* flush right */
+
+  /* Animations */
+  --mf-transition:     150ms cubic-bezier(0.4,0,0.2,1);
+  --mf-transition-slow:280ms cubic-bezier(0.4,0,0.2,1);
+}
+
+/* ────────────────────────────────────────────────────────────────────────────
+   PRE-JOIN — theme-aware (light default, dark overridden)
+   ──────────────────────────────────────────────────────────────────────────── */
+
+[data-prejoin] {
+  /* Light mode */
+  --mf-pj-bg-from:        #f0f0fc;
+  --mf-pj-bg-to:          #f8f8ff;
+  --mf-pj-card:           rgba(255,255,255,0.85);
+  --mf-pj-card-border:    rgba(77,65,243,0.12);
+  --mf-pj-surface:        rgba(248,248,255,0.90);
+  --mf-pj-surface-border: rgba(0,0,0,0.07);
+
+  --mf-pj-text-primary:   #111118;
+  --mf-pj-text-secondary: #52526a;
+  --mf-pj-text-muted:     #9898ae;
+
+  --mf-pj-preview-bg:     #e8e8f4;
+  --mf-pj-preview-border: rgba(77,65,243,0.14);
+
+  --mf-pj-input-bg:       rgba(0,0,0,0.04);
+  --mf-pj-input-border:   rgba(0,0,0,0.10);
+  --mf-pj-input-hover:    rgba(77,65,243,0.08);
+  --mf-pj-input-focus:    rgba(77,65,243,0.22);
+
+  --mf-pj-btn-text:       rgba(255,255,255,0.96);
+  --mf-pj-shadow:         0 24px 64px rgba(77,65,243,0.12), 0 4px 16px rgba(0,0,0,0.06);
+  --mf-pj-shadow-sm:      0 2px 12px rgba(0,0,0,0.06);
+  --mf-pj-divider:        rgba(0,0,0,0.07);
+
+  --mf-pj-toggle-on:      rgba(0,0,0,0.05);
+  --mf-pj-toggle-on-text: #111118;
+  --mf-pj-toggle-off:     rgba(239,68,68,0.10);
+  --mf-pj-toggle-off-text:#dc2626;
+}
+
+.dark [data-prejoin] {
+  --mf-pj-bg-from:        #09090e;
+  --mf-pj-bg-to:          #0f0f17;
+  --mf-pj-card:           rgba(20,20,30,0.90);
+  --mf-pj-card-border:    rgba(77,65,243,0.22);
+  --mf-pj-surface:        rgba(26,26,38,0.85);
+  --mf-pj-surface-border: rgba(255,255,255,0.07);
+
+  --mf-pj-text-primary:   rgba(255,255,255,0.93);
+  --mf-pj-text-secondary: rgba(255,255,255,0.50);
+  --mf-pj-text-muted:     rgba(255,255,255,0.26);
+
+  --mf-pj-preview-bg:     #12121c;
+  --mf-pj-preview-border: rgba(77,65,243,0.25);
+
+  --mf-pj-input-bg:       rgba(255,255,255,0.06);
+  --mf-pj-input-border:   rgba(255,255,255,0.10);
+  --mf-pj-input-hover:    rgba(77,65,243,0.12);
+  --mf-pj-input-focus:    rgba(77,65,243,0.30);
+
+  --mf-pj-btn-text:       rgba(255,255,255,0.96);
+  --mf-pj-shadow:         0 24px 64px rgba(0,0,0,0.60), 0 0 0 1px rgba(77,65,243,0.20);
+  --mf-pj-shadow-sm:      0 2px 12px rgba(0,0,0,0.40);
+  --mf-pj-divider:        rgba(255,255,255,0.07);
+
+  --mf-pj-toggle-on:      rgba(255,255,255,0.08);
+  --mf-pj-toggle-on-text: rgba(255,255,255,0.90);
+  --mf-pj-toggle-off:     rgba(239,68,68,0.15);
+  --mf-pj-toggle-off-text:#f87171;
+}
+
+/* ────────────────────────────────────────────────────────────────────────────
+   PANEL (right sidebar) — tokens scoped under [data-meeting]
+   ──────────────────────────────────────────────────────────────────────────── */
+
+[data-meeting] [data-panel] {
+  --mf-panel-bg:      rgba(14,14,20,0.97);
+  --mf-panel-header:  rgba(18,18,26,0.95);
+  --mf-panel-border:  rgba(255,255,255,0.07);
+  --mf-panel-item:    rgba(255,255,255,0.02);
+  --mf-panel-item-hover: rgba(255,255,255,0.04);
+  --mf-panel-item-active: rgba(77,65,243,0.12);
+}
+
+/* ────────────────────────────────────────────────────────────────────────────
+   KEYFRAME ANIMATIONS
+   ──────────────────────────────────────────────────────────────────────────── */
+
+@keyframes mf-speak-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 var(--mf-success-glow); }
+  50%       { box-shadow: 0 0 0 4px transparent; }
+}
+
+@keyframes mf-float-up {
+  0%   { transform: translateY(0) scale(1);    opacity: 1; }
+  70%  { transform: translateY(-160px) scale(1.3); opacity: 0.9; }
+  100% { transform: translateY(-240px) scale(1.1); opacity: 0; }
+}
+
+@keyframes mf-live-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.5; transform: scale(0.8); }
+}
+
+@keyframes mf-wave {
+  0%   { height: 4px; }
+  50%  { height: 16px; }
+  100% { height: 4px; }
+}
+
+@keyframes mf-admit-in {
+  from { opacity: 0; transform: translateY(-8px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0)    scale(1); }
+}
+
+/* Utility classes */
+[data-meeting] .mf-glass {
+  background: var(--mf-bg-glass);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+}
+
+[data-meeting] .mf-tile-ring-speaking {
+  box-shadow: 0 0 0 2.5px var(--mf-success), 0 0 0 5px var(--mf-success-muted);
+  animation: mf-speak-pulse 2s ease-in-out infinite;
+}
+
+[data-meeting] .mf-tile-ring-pinned {
+  box-shadow: 0 0 0 2.5px var(--mf-accent), 0 0 0 5px var(--mf-accent-subtle);
+}
+
+[data-meeting] .mf-tile-ring-default {
+  box-shadow: inset 0 0 0 1px var(--mf-border);
+}
+
+/* Scrollbar inside panels */
+[data-meeting] [data-panel] ::-webkit-scrollbar { width: 4px; }
+[data-meeting] [data-panel] ::-webkit-scrollbar-thumb { background: var(--mf-border-medium); border-radius: 9999px; }
+[data-meeting] [data-panel] ::-webkit-scrollbar-track { background: transparent; }
+
+/* Hide scrollbar utility */
+.mf-no-scroll { scrollbar-width: none; }
+.mf-no-scroll::-webkit-scrollbar { display: none; }
