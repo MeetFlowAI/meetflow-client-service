@@ -36,6 +36,7 @@ const NAV_ROUTES: Record<WorkspaceNavItem, string> = {
   chats: PAGE_WORKSPACE_DASHBOARD.chats.absolutePath,
   channels: PAGE_WORKSPACE_DASHBOARD.channels.absolutePath,
   members: PAGE_WORKSPACE_DASHBOARD.members.absolutePath,
+  admin: PAGE_WORKSPACE_DASHBOARD.members.absolutePath,
 };
 
 /** Derives the active nav item from the current URL pathname */

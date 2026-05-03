@@ -6,14 +6,12 @@ import {
   SlidersHorizontal,
   X,
   RefreshCw,
-  ChevronDown,
 } from "lucide-react";
 import clsx from "clsx";
 
 /* Local Imports */
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -24,7 +22,6 @@ import {
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
 } from "@/components/ui/dropdown-menu";
-import { Separator } from "@/components/ui/separator";
 import { typography } from "@/theme/typography";
 
 // ----------------------------------------------------------------------

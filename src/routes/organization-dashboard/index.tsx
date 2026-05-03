@@ -45,7 +45,7 @@ const LaunchpadPage = lazy(
 );
 
 const SettingsPage = lazy(
-  () => import("@/views/organization-dashboard/settings"),
+  () => import("@/views/organization-dashboard/settings/index"),
 );
 
 const SupportPage = lazy(

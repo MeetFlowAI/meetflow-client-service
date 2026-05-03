@@ -69,12 +69,13 @@ const AuthenticatedUserCard: React.FC = (): JSX.Element => {
                   >
                     {/* Avatar */}
                     <div className="relative shrink-0">
-                      {user?.avatar_url ? (
-                        <img
-                          src={user.avatar_url}
-                          alt={fullName}
-                          className="h-9 w-9 rounded-full object-cover"
-                        />
+                      {user ? (
+                        // <img
+                        //   src={user.avatar_url}
+                        //   alt={fullName}
+                        //   className="h-9 w-9 rounded-full object-cover"
+                        // />
+                        <User className="h-9 w-9" />
                       ) : (
                         <div
                           className={clsx(

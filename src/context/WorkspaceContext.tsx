@@ -10,7 +10,12 @@ import React, {
 // ----------------------------------------------------------------------
 
 /** Nav items: home, chats, channels, members */
-export type WorkspaceNavItem = "home" | "chats" | "channels" | "members";
+export type WorkspaceNavItem =
+  | "home"
+  | "chats"
+  | "channels"
+  | "members"
+  | "admin";
 
 export interface ISelectedWorkspace {
   id: number;

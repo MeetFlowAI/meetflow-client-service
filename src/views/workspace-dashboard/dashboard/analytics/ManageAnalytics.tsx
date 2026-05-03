@@ -30,9 +30,7 @@ import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useWorkspace } from "@/context/WorkspaceContext";
 import { getAllMeetingsRequest } from "@/services/workspace-dashboard/meetings";
-import { getAllTasksRequest } from "@/services/workspace-dashboard/tasks";
 import { getAllChannelsRequest } from "@/services/workspace-dashboard/channels";
-import { getAllChatsRequest } from "@/services/workspace-dashboard/chats";
 import { typography } from "@/theme/typography";
 
 // ----------------------------------------------------------------------
@@ -58,9 +56,7 @@ const ManageAnalytics = (): JSX.Element => {
   const { selectedWorkspaceId } = useWorkspace();
 
   const [meetings, setMeetings] = useState<any[]>([]);
-  const [tasks, setTasks] = useState<any[]>([]);
   const [channels, setChannels] = useState<any[]>([]);
-  const [chats, setChats] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   // ── Fetch ──────────────────────────────────────────────────────────────────
@@ -68,11 +64,9 @@ const ManageAnalytics = (): JSX.Element => {
     setLoading(true);
     try {
       const wsId = selectedWorkspaceId ?? undefined;
-      const [meetRes, taskRes, chanRes, chatRes] = await Promise.allSettled([
+      const [meetRes, chanRes] = await Promise.allSettled([
         getAllMeetingsRequest({ workspace_id: wsId, limit: 200 }),
-        getAllTasksRequest({ workspace_id: wsId, limit: 200 }),
         wsId ? getAllChannelsRequest(wsId) : Promise.resolve(null),
-        getAllChatsRequest({ workspace_id: wsId as number, limit: 200 }),
       ]);
       const safe = <T,>(r: PromiseSettledResult<any>): T[] => {
         if (r.status !== "fulfilled" || !r.value) return [];
@@ -86,9 +80,7 @@ const ManageAnalytics = (): JSX.Element => {
         return Array.isArray(r.value?.data) ? r.value.data : [];
       };
       setMeetings(safe(meetRes));
-      setTasks(safe(taskRes));
       setChannels(safe(chanRes));
-      setChats(safe(chatRes));
     } finally {
       setLoading(false);
     }
@@ -101,13 +93,10 @@ const ManageAnalytics = (): JSX.Element => {
   // ── Derived stats ──────────────────────────────────────────────────────────
   const totalMeetings = meetings.length;
   const liveMeetings = meetings.filter((m) => m.status === "live").length;
-  const totalTasks = tasks.length;
-  const doneTasks = tasks.filter((t) => t.status === "done").length;
   const totalChannels = channels.length;
-  const totalChats = chats.length;
+  const totalChats = 0;
 
-  const taskCompletionPct =
-    totalTasks > 0 ? Math.round((doneTasks / totalTasks) * 100) : 0;
+  const taskCompletionPct = 0
 
   const statCards = [
     {
