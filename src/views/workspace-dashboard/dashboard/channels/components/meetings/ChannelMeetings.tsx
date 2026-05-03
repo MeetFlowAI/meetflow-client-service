@@ -29,6 +29,11 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { typography } from "@/theme/typography";
 import type { IMeeting } from "@/services/workspace-dashboard/meetings";
+import {
+  useMeetingStatusStream,
+  STAGE_ORDER,
+  STAGE_LABELS,
+} from "../../../meetings/hooks/useMeetingStatusStream";
 
 // ----------------------------------------------------------------------
 
@@ -42,91 +47,120 @@ interface ChannelMeetingsProps {
 
 // ── AI status badge ─────────────────────────────────────────────────────────
 
-const AIStatusBadge = ({
-  meeting,
-}: {
-  meeting: IMeeting;
-}): JSX.Element | null => {
+const AIStageTracker = ({ meeting }: { meeting: IMeeting }) => {
+  const liveState = useMeetingStatusStream(
+    meeting.workspace_id,
+    meeting.channel_id,
+    meeting.id,
+    {
+      ai_status: meeting.ai_status ?? "not_triggered",
+      ai_stage: (meeting as any).ai_stage ?? null,
+    },
+  );
+
+  console.log("liveState", liveState);
+
+  const ai_status = liveState?.ai_status;
+
+  // 🔥 normalize stage here
+  const rawStage = liveState?.ai_stage ?? null;
+  const ai_stage =
+    rawStage === null && ai_status === "processing"
+      ? "transcription" // ← default to transcription when pipeline just started
+      : rawStage;
+
+  console.log("ai_status", ai_status, "ai_stage", ai_stage);
   const navigate = useNavigate();
 
-  if (!meeting.ai_status || meeting.ai_status === "not_triggered") return null;
+  if (!ai_status || ai_status === "not_triggered") return null;
 
-  if (meeting.ai_status === "processing") {
+  if (ai_status === "failed") {
+    console.log("ai_status", ai_status, "ai_stage", ai_stage);
     return (
-      <div className="flex items-center gap-1.5 mt-1.5">
-        <span
-          className={clsx(
-            "inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full",
-            "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400",
-          )}
-        >
-          <Loader2 className="h-3 w-3 animate-spin" />
-          AI Processing...
+      <div className="flex items-center gap-1.5 mt-2">
+        <span className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full bg-red-50 dark:bg-red-900/20 text-red-500">
+          <AlertCircle className="h-3 w-3" /> AI processing failed
         </span>
       </div>
     );
   }
 
-  if (meeting.ai_status === "pending_review") {
+  if (ai_status === "completed") {
+    console.log("ai_status", ai_status, "ai_stage", ai_stage);
     return (
-      <div className="flex items-center gap-1.5 mt-1.5">
-        <button
-          onClick={() =>
-            navigate(
-              `/workspace/channels/${meeting.channel_id}/meetings/${meeting.id}/review`,
-            )
-          }
-          className={clsx(
-            "inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full",
-            "bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400",
-            "hover:bg-amber-100 dark:hover:bg-amber-900/40 transition-colors cursor-pointer",
-          )}
-        >
-          <Bot className="h-3 w-3" />⚡ Review Tasks
-        </button>
-      </div>
-    );
-  }
-
-  if (meeting.ai_status === "completed") {
-    return (
-      <div className="flex items-center gap-1.5 mt-1.5">
+      <div className="flex items-center gap-1.5 mt-2">
         <button
           onClick={() =>
             navigate(
               `/workspace/channels/${meeting.channel_id}/meetings/${meeting.id}/summary`,
             )
           }
-          className={clsx(
-            "inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full",
-            "bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400",
-            "hover:bg-green-100 dark:hover:bg-green-900/40 transition-colors cursor-pointer",
-          )}
+          className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 hover:bg-green-100 transition-colors"
         >
-          <CheckCircle2 className="h-3 w-3" />
-          📋 View Summary
+          <CheckCircle2 className="h-3 w-3" /> View Summary
         </button>
       </div>
     );
   }
 
-  if (meeting.ai_status === "failed") {
+  if (ai_status === "pending_review") {
+    console.log("ai_status", ai_status, "ai_stage", ai_stage);
     return (
-      <div className="flex items-center gap-1.5 mt-1.5">
-        <span
-          className={clsx(
-            "inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full",
-            "bg-red-50 dark:bg-red-900/20 text-red-500 dark:text-red-400",
-          )}
+      <div className="flex items-center gap-1.5 mt-2">
+        <button
+          onClick={() =>
+            navigate(
+              `/workspace/channels/${meeting.channel_id}/meetings/${meeting.id}/review`,
+            )
+          }
+          className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 hover:bg-amber-100 transition-colors"
         >
-          <AlertCircle className="h-3 w-3" />
-          AI processing failed
-        </span>
+          <Bot className="h-3 w-3" /> ⚡ Review Tasks
+        </button>
       </div>
     );
   }
 
-  return null;
+  // "processing" — show stage-by-stage progress
+  const currentStageIdx = STAGE_ORDER.indexOf(ai_stage as any);
+  console.log("currentStageIdx", currentStageIdx);
+
+  return (
+    <div className="mt-2 flex flex-col gap-1">
+      {STAGE_ORDER.filter(
+        (s) => s !== "completed" && s !== "pending_review",
+      ).map((stage, idx) => {
+        console.log("stage", stage, "idx", idx);
+        const isDone = currentStageIdx > idx;
+        console.log("isDone", isDone);
+        const isCurrent = currentStageIdx === idx;
+        console.log("isCurrent", isCurrent);
+        const label = STAGE_LABELS[stage];
+        console.log("label", label);
+
+        return (
+          <div
+            key={stage}
+            className={clsx(
+              "flex items-center gap-1.5 text-[11px]",
+              isDone && "text-green-600 dark:text-green-400",
+              isCurrent && "text-blue-600 dark:text-blue-400 font-medium",
+              !isDone &&
+                !isCurrent &&
+                "text-secondary-300 dark:text-secondary-600",
+            )}
+          >
+            {isDone && <CheckCircle2 className="h-3 w-3 shrink-0" />}
+            {isCurrent && <Loader2 className="h-3 w-3 shrink-0 animate-spin" />}
+            {!isDone && !isCurrent && (
+              <div className="h-3 w-3 shrink-0 rounded-full border border-current opacity-40" />
+            )}
+            <span>{isCurrent ? label.ongoing : label.done}</span>
+          </div>
+        );
+      })}
+    </div>
+  );
 };
 
 // ----------------------------------------------------------------------
@@ -280,8 +314,8 @@ const ChannelMeetings: React.FC<ChannelMeetingsProps> = ({
                     )}
                   </p>
                 </div>
-                {/* AI status badge */}
-                <AIStatusBadge meeting={m} />
+                {/* AI stage badge */}
+                <AIStageTracker meeting={m} />
               </div>
             </div>
           ))}

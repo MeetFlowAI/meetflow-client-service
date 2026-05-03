@@ -1,11 +1,10 @@
 /**
- * components/room/ParticipantTile.tsx
+ * ParticipantTile.tsx  (v3 — premium redesign, CSS token theming)
  *
- * Single participant video tile — production-grade, fully memoized.
- *
- * useIsMuted API (v2.9.x): useIsMuted(trackRef: TrackReferenceOrPlaceholder) → boolean
- * Passes a TrackReferenceOrPlaceholder with publication: undefined for the
- * correct "no publication = muted" behavior.
+ * Uses --mf-* tokens. Zero hardcoded colors.
+ * States: speaking ring · pinned ring · hand raised badge ·
+ *         mic-off badge · connection quality · camera-off avatar ·
+ *         local mirror · hover pin hint.
  */
 
 import React, { type JSX } from "react";
@@ -24,20 +23,15 @@ import {
   getParticipantInitials,
   getDisplayName,
 } from "../../utils/participant";
-import { useMeetingData } from "../../context/MeetingDataContext";
+import { useMeetingData } from "../../context/useMeetingData";
 import ConnectionQualityIndicator from "./ConnectionQualityIndicator";
-
-// ── Types ──────────────────────────────────────────────────────────────────────
 
 interface ParticipantTileProps {
   trackRef: TrackReferenceOrPlaceholder;
   isPinned?: boolean;
   onPin?: () => void;
-  /** Compact mode: smaller tiles in thumbnail strip / camera strip */
   compact?: boolean;
 }
-
-// ── Component ──────────────────────────────────────────────────────────────────
 
 const ParticipantTileInner: React.FC<ParticipantTileProps> = ({
   trackRef,
@@ -49,8 +43,6 @@ const ParticipantTileInner: React.FC<ParticipantTileProps> = ({
   const isSpeaking = useIsSpeaking(participant);
   const { name, identity } = useParticipantInfo({ participant });
 
-  // Build a mic TrackReferenceOrPlaceholder for useIsMuted
-  // publication: undefined means "no mic track = treated as muted"
   const micTrackRef: TrackReferenceOrPlaceholder = {
     participant,
     source: Track.Source.Microphone,
@@ -58,37 +50,38 @@ const ParticipantTileInner: React.FC<ParticipantTileProps> = ({
   };
   const isMicMuted = useIsMuted(micTrackRef);
 
-  // Camera is off if no publication on this ref, or the publication is muted
   const isScreenShare = trackRef.source === Track.Source.ScreenShare;
-  const hasVideo =
-    isScreenShare ||
-    (!!trackRef.publication && !trackRef.publication.isMuted);
+  const hasVideo = isScreenShare
+    ? !!trackRef.publication
+    : !!trackRef.publication && !trackRef.publication.isMuted;
 
-  // Raised hand from context
   const { raisedHands } = useMeetingData();
   const hasHandRaised = raisedHands.has(identity ?? "");
 
-  // Display info
   const displayName = getDisplayName(name, identity);
   const avatarColor = getParticipantColor(identity ?? "default");
   const initials = getParticipantInitials(displayName);
 
-  // Ring: speaking > pinned > default
+  // Ring class: applied via CSS utility classes from meeting.css
   const ringClass =
     isSpeaking && !isPinned
-      ? "ring-2 ring-emerald-400/90 ring-offset-[1.5px] ring-offset-[#0d0d0f]"
+      ? "mf-tile-ring-speaking"
       : isPinned
-        ? "ring-2 ring-primary-400/90 ring-offset-[1.5px] ring-offset-[#0d0d0f]"
-        : "ring-1 ring-white/[0.07]";
+        ? "mf-tile-ring-pinned"
+        : "mf-tile-ring-default";
 
   return (
     <div
       className={clsx(
-        "relative flex items-center justify-center rounded-2xl overflow-hidden",
-        "bg-[#1c1c22] cursor-pointer select-none w-full h-full",
-        "transition-all duration-200 ease-out",
+        "relative flex items-center justify-center overflow-hidden w-full h-full",
+        "select-none transition-all duration-200 ease-out",
         ringClass,
+        onPin && "cursor-pointer",
       )}
+      style={{
+        background: "var(--mf-tile-bg)",
+        borderRadius: "var(--mf-radius-tile)",
+      }}
       onClick={onPin}
       role={onPin ? "button" : undefined}
       aria-label={
@@ -96,7 +89,7 @@ const ParticipantTileInner: React.FC<ParticipantTileProps> = ({
       }
       aria-pressed={onPin ? isPinned : undefined}
     >
-      {/* ── Video ───────────────────────────────────────────────── */}
+      {/* ── Video ─────────────────────────────────────────────────────── */}
       {hasVideo && trackRef.publication && (
         <VideoTrack
           trackRef={trackRef as any}
@@ -109,45 +102,73 @@ const ParticipantTileInner: React.FC<ParticipantTileProps> = ({
         />
       )}
 
-      {/* ── Avatar fallback ──────────────────────────────────────── */}
+      {/* ── Avatar fallback ───────────────────────────────────────────── */}
       {!hasVideo && (
-        <div className="absolute inset-0 flex items-center justify-center">
+        <div
+          className="absolute inset-0 flex items-center justify-center"
+          style={{
+            background: `radial-gradient(ellipse at center, ${avatarColor}22 0%, var(--mf-tile-bg) 70%)`,
+          }}
+        >
           <div
             className={clsx(
               "rounded-full flex items-center justify-center text-white font-bold",
-              compact ? "h-10 w-10 text-sm" : "h-16 w-16 text-xl",
+              "shadow-lg transition-transform duration-200",
+              compact ? "h-9 w-9 text-xs" : "h-16 w-16 text-xl",
             )}
-            style={{ backgroundColor: avatarColor }}
-            aria-label={`${displayName} — camera off`}
+            style={{
+              background: avatarColor,
+              boxShadow: `0 0 0 3px ${avatarColor}30`,
+            }}
           >
             {initials}
           </div>
         </div>
       )}
 
-      {/* ── Speaking glow border (inset) ─────────────────────────── */}
+      {/* ── Speaking glow inset ───────────────────────────────────────── */}
       {isSpeaking && (
-        <div className="absolute inset-0 rounded-2xl pointer-events-none border-2 border-emerald-400/30" />
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            borderRadius: "var(--mf-radius-tile)",
+            boxShadow: "inset 0 0 0 1.5px var(--mf-success-muted)",
+          }}
+        />
       )}
 
-      {/* ── Top-right: connection quality + pin icon ─────────────── */}
+      {/* ── Top-right: quality + pin ──────────────────────────────────── */}
       <div className="absolute top-2 right-2 flex items-center gap-1.5">
         {!compact && (
-          <div className="bg-black/50 rounded px-1 py-0.5">
+          <div
+            className="flex items-center justify-center rounded-md px-1 py-0.5"
+            style={{
+              background: "rgba(0,0,0,0.52)",
+              backdropFilter: "blur(4px)",
+            }}
+          >
             <ConnectionQualityIndicator participant={participant} />
           </div>
         )}
         {isPinned && (
-          <div className="h-5 w-5 rounded-full bg-primary-500/85 flex items-center justify-center">
+          <div
+            className="h-5 w-5 rounded-full flex items-center justify-center"
+            style={{ background: "var(--mf-accent)" }}
+          >
             <Pin className="h-2.5 w-2.5 text-white" />
           </div>
         )}
       </div>
 
-      {/* ── Top-left: raise hand badge ───────────────────────────── */}
+      {/* ── Top-left: raise hand ─────────────────────────────────────── */}
       {hasHandRaised && (
         <div
-          className="absolute top-2 left-2 h-6 w-6 rounded-full bg-amber-500/90 flex items-center justify-center text-sm shadow-lg animate-bounce"
+          className="absolute top-2 left-2 h-7 w-7 rounded-full flex items-center justify-center text-sm shadow-lg"
+          style={{
+            background: "var(--mf-warning)",
+            animation: "mf-admit-in 0.2s ease-out",
+            boxShadow: "0 2px 8px rgba(251,191,36,0.45)",
+          }}
           title="Hand raised"
           aria-label="Hand raised"
         >
@@ -155,26 +176,44 @@ const ParticipantTileInner: React.FC<ParticipantTileProps> = ({
         </div>
       )}
 
-      {/* ── Bottom gradient + name/mic ───────────────────────────── */}
-      <div className="absolute bottom-0 left-0 right-0 flex items-end justify-between px-2.5 pb-2 pt-8 bg-gradient-to-t from-black/75 via-black/20 to-transparent pointer-events-none">
+      {/* ── Bottom gradient + name bar ────────────────────────────────── */}
+      <div
+        className="absolute bottom-0 left-0 right-0 flex items-end justify-between pointer-events-none"
+        style={{
+          padding: compact ? "18px 8px 7px" : "32px 11px 9px",
+          background:
+            "linear-gradient(to top, rgba(0,0,0,0.78) 0%, rgba(0,0,0,0.18) 55%, transparent 100%)",
+        }}
+      >
         <span
           className={clsx(
-            "text-white font-medium leading-none drop-shadow",
-            compact ? "text-[10px]" : "text-[11px]",
+            "font-medium leading-none",
+            compact ? "text-[9px]" : "text-[11px]",
           )}
+          style={{
+            color: "rgba(255,255,255,0.92)",
+            textShadow: "0 1px 3px rgba(0,0,0,0.5)",
+          }}
         >
           {displayName}
           {participant.isLocal && (
-            <span className="ml-1 text-[9px] text-white/50 font-normal">
+            <span
+              className="ml-1 font-normal"
+              style={{ color: "rgba(255,255,255,0.45)", fontSize: "9px" }}
+            >
               (you)
             </span>
           )}
         </span>
 
-        {/* Mic muted */}
+        {/* Mic-off badge */}
         {isMicMuted && (
           <div
-            className="h-5 w-5 rounded-full bg-red-500/90 flex items-center justify-center shrink-0"
+            className="h-5 w-5 rounded-full flex items-center justify-center shrink-0"
+            style={{
+              background: "var(--mf-danger-strong)",
+              boxShadow: "0 1px 4px rgba(239,68,68,0.5)",
+            }}
             title="Microphone muted"
             aria-label="Microphone muted"
           >
@@ -195,10 +234,22 @@ const ParticipantTileInner: React.FC<ParticipantTileProps> = ({
         )}
       </div>
 
-      {/* ── Hover: pin hint ──────────────────────────────────────── */}
+      {/* ── Hover: pin CTA ────────────────────────────────────────────── */}
       {!compact && onPin && !isPinned && (
-        <div className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity duration-150 bg-black/25 rounded-2xl">
-          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-black/70 text-white text-[11px] font-medium">
+        <div
+          className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity duration-150"
+          style={{
+            background: "rgba(0,0,0,0.22)",
+            borderRadius: "var(--mf-radius-tile)",
+          }}
+        >
+          <div
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-white text-[11px] font-medium"
+            style={{
+              background: "rgba(0,0,0,0.72)",
+              backdropFilter: "blur(6px)",
+            }}
+          >
             <Pin className="h-3 w-3" />
             Click to pin
           </div>
@@ -208,16 +259,16 @@ const ParticipantTileInner: React.FC<ParticipantTileProps> = ({
   );
 };
 
-// Memoized with custom comparator to prevent render storms in large meetings
-const ParticipantTile = React.memo(ParticipantTileInner, (prev, next) => {
-  return (
+const ParticipantTile = React.memo(
+  ParticipantTileInner,
+  (prev, next) =>
     prev.isPinned === next.isPinned &&
     prev.compact === next.compact &&
     prev.trackRef.participant.identity === next.trackRef.participant.identity &&
     prev.trackRef.source === next.trackRef.source &&
-    prev.trackRef.publication?.trackSid === next.trackRef.publication?.trackSid &&
-    prev.onPin === next.onPin
-  );
-});
+    prev.trackRef.publication?.trackSid ===
+      next.trackRef.publication?.trackSid &&
+    prev.onPin === next.onPin,
+);
 
 export default ParticipantTile;

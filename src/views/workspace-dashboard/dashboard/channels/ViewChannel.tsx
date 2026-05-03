@@ -34,6 +34,7 @@ import {
   endMeetingRequest,
   getChannelMeetingsRequest,
   type IStartMeetingResponse,
+  // type IMeeting,
 } from "@/services/workspace-dashboard/meetings";
 import { Button } from "@/components/ui/button";
 import Toast from "@/components/toast";
@@ -83,8 +84,20 @@ const ViewChannel = (): JSX.Element => {
     queryKey: ["channel-meetings", selectedWorkspaceId, id],
     queryFn: () =>
       getChannelMeetingsRequest(selectedWorkspaceId!, id!, { limit: 20 }),
-    enabled: !!selectedWorkspaceId && !!id && activeTab === "meetings",
+    enabled: !!selectedWorkspaceId && !!id,
     select: (res) => res?.data ?? [],
+    staleTime: 0,
+    refetchInterval: (query) => {
+      // query.state.data is the RAW response before select transforms it
+      // so we must access .data to get the array
+      const raw = query.state.data as { data: any[] } | undefined;
+      const list = raw?.data ?? [];
+      const hasTransitional = list.some(
+        (m: any) =>
+          m.ai_status === "processing" || m.ai_status === "pending_review",
+      );
+      return hasTransitional ? 8_000 : false;
+    },
   });
 
   const activeMeeting =
@@ -139,6 +152,11 @@ const ViewChannel = (): JSX.Element => {
       /* silent */
     }
     setMeetingSession(null);
+
+    // Wait briefly for backend to update ai_status to "processing" before refetching.
+    // Without this, refetch runs before the DB update and returns ai_status="not_triggered"
+    // which makes the hook's enabled=false and polling never starts.
+    await new Promise((r) => setTimeout(r, 1500));
     refetchMeetings();
   };
 

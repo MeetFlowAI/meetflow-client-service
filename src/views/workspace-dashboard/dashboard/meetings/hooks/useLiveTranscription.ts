@@ -44,6 +44,15 @@ export function useLiveTranscription(): UseLiveTranscriptionReturn {
   const [enabled, setEnabled] = useState(false);
   const [captions, setCaptions] = useState<CaptionLine[]>([]);
 
+  // Clear captions when transcription is disabled
+  useEffect(() => {
+    if (!enabled) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setCaptions([]);
+    }
+  }, [enabled]);
+
+  // Set up transcription listener
   useEffect(() => {
     if (!enabled) {
       return;
@@ -89,14 +98,7 @@ export function useLiveTranscription(): UseLiveTranscriptionReturn {
     };
   }, [room, enabled]);
 
-  const toggle = () =>
-    setEnabled((currentEnabled) => {
-      if (currentEnabled) {
-        setCaptions([]);
-      }
-
-      return !currentEnabled;
-    });
+  const toggle = () => setEnabled((v) => !v);
 
   return { enabled, toggle, captions };
 }

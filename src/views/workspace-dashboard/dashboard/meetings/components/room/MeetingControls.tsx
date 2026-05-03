@@ -1,14 +1,12 @@
 /**
- * components/room/MeetingControls.tsx  (v4 — final, all features)
+ * MeetingControls.tsx  (v5 — premium redesign, CSS token theming)
  *
- * Added in v4:
- *  ✅ Device switcher panel toggle (Settings icon)
- *  ✅ waitingCount badge on Participants button (host sees pending admissions)
- *  ✅ AI summary info item in More menu (posts to backend)
- *
- * More menu items:
- *   Captions (T) · Noise cancellation · Background · Polls ·
- *   Device settings · PiP · Record (host only)
+ * Design:
+ *  - Floating glass bar (not flush, lifted 10px off bottom edge)
+ *  - Blur backdrop
+ *  - Subtle separator between left/center/right groups
+ *  - Smooth hover lift on every button
+ *  - Danger buttons are pill-shaped for clear visual distinction
  */
 
 import React, {
@@ -48,7 +46,7 @@ import {
   Volume2,
 } from "lucide-react";
 import clsx from "clsx";
-import { useMeetingData } from "../../context/MeetingDataContext";
+import { useMeetingData } from "../../context/useMeetingData";
 import { useMeetingTimer } from "../../hooks/useMeetingTimer";
 import ControlBtn from "../shared/ControlBtn";
 import type { MeetingLayout } from "./VideoGrid";
@@ -57,7 +55,7 @@ import type { UseLiveTranscriptionReturn } from "../../hooks/useLiveTranscriptio
 import type { UseNoiseCancellationReturn } from "../../hooks/useNoiseCancellation";
 import type { UsePictureInPictureReturn } from "../../hooks/usePictureInPicture";
 
-// ── Emoji reactions picker ─────────────────────────────────────────────────────
+// ── Emoji picker ───────────────────────────────────────────────────────────────
 
 const EMOJIS = ["👍", "❤️", "😂", "😮", "🎉", "👏", "🔥", "😢"];
 
@@ -66,12 +64,14 @@ const ReactionPicker: React.FC<{
   onClose: () => void;
 }> = ({ onSelect, onClose }) => (
   <div
-    className={clsx(
-      "absolute bottom-full mb-2 left-1/2 -translate-x-1/2 z-30",
-      "flex gap-1 p-2 rounded-2xl",
-      "bg-[#1a1a22] border border-white/10 shadow-2xl shadow-black/50",
-      "animate-in fade-in slide-in-from-bottom-2 duration-150",
-    )}
+    className="absolute bottom-[calc(100%+8px)] left-1/2 -translate-x-1/2 z-40 flex gap-1 p-2 rounded-2xl"
+    style={{
+      background: "var(--mf-bg-elevated)",
+      border: "1px solid var(--mf-border-medium)",
+      boxShadow: "var(--mf-shadow-lg)",
+      backdropFilter: "blur(12px)",
+      animation: "mf-admit-in 0.15s ease-out",
+    }}
     role="listbox"
     aria-label="Emoji reactions"
   >
@@ -82,7 +82,14 @@ const ReactionPicker: React.FC<{
           onSelect(e);
           onClose();
         }}
-        className="h-9 w-9 flex items-center justify-center text-xl rounded-xl hover:bg-white/10 transition-colors hover:scale-125 active:scale-100 duration-100"
+        className="h-9 w-9 flex items-center justify-center text-xl rounded-xl transition-all duration-100 hover:scale-125 active:scale-100"
+        style={{ borderRadius: "var(--mf-radius-md)" }}
+        onMouseEnter={(ev) =>
+          (ev.currentTarget.style.background = "var(--mf-bg-surface)")
+        }
+        onMouseLeave={(ev) =>
+          (ev.currentTarget.style.background = "transparent")
+        }
         title={e}
         aria-label={`React with ${e}`}
       >
@@ -108,13 +115,17 @@ const MoreMenu: React.FC<{ items: MoreMenuItem[]; onClose: () => void }> = ({
   onClose,
 }) => (
   <>
-    <div className="fixed inset-0 z-20" onClick={onClose} aria-hidden />
+    <div className="fixed inset-0 z-30" onClick={onClose} aria-hidden />
     <div
-      className={clsx(
-        "absolute bottom-full mb-2 right-0 z-30 w-52",
-        "bg-[#1e1e26] border border-white/[0.1] rounded-2xl shadow-2xl shadow-black/60",
-        "py-1.5 animate-in fade-in slide-in-from-bottom-2 duration-150",
-      )}
+      className="absolute bottom-[calc(100%+8px)] right-0 z-40 w-52 py-1.5"
+      style={{
+        background: "var(--mf-bg-elevated)",
+        border: "1px solid var(--mf-border-medium)",
+        borderRadius: "var(--mf-radius-lg)",
+        boxShadow: "var(--mf-shadow-lg)",
+        backdropFilter: "blur(12px)",
+        animation: "mf-admit-in 0.15s ease-out",
+      }}
       role="menu"
     >
       {items
@@ -127,30 +138,47 @@ const MoreMenu: React.FC<{ items: MoreMenuItem[]; onClose: () => void }> = ({
               onClose();
             }}
             role="menuitem"
-            className={clsx(
-              "w-full flex items-center gap-2.5 px-3 py-2.5 text-[12px] font-medium transition-colors",
-              item.active
-                ? "text-primary-400 bg-primary-500/10"
+            className="w-full flex items-center gap-2.5 px-3 py-2.5 text-[12px] font-medium transition-colors duration-100"
+            style={{
+              color: item.active
+                ? "var(--mf-accent-text)"
                 : item.danger
-                  ? "text-red-400 hover:bg-red-500/10"
-                  : "text-white/70 hover:bg-white/[0.05] hover:text-white",
-            )}
+                  ? "var(--mf-danger)"
+                  : "var(--mf-text-secondary)",
+              background: item.active
+                ? "var(--mf-accent-subtle)"
+                : "transparent",
+            }}
+            onMouseEnter={(ev) => {
+              if (!item.active)
+                ev.currentTarget.style.background = "var(--mf-bg-surface)";
+            }}
+            onMouseLeave={(ev) => {
+              ev.currentTarget.style.background = item.active
+                ? "var(--mf-accent-subtle)"
+                : "transparent";
+            }}
           >
             <span
-              className={clsx(
-                "shrink-0",
-                item.active
-                  ? "text-primary-400"
+              style={{
+                color: item.active
+                  ? "var(--mf-accent-text)"
                   : item.danger
-                    ? "text-red-400"
-                    : "text-white/40",
-              )}
+                    ? "var(--mf-danger)"
+                    : "var(--mf-text-muted)",
+              }}
             >
               {item.icon}
             </span>
             {item.label}
             {item.active && (
-              <span className="ml-auto text-[9px] px-1.5 py-0.5 rounded-full bg-primary-500/20 text-primary-400 font-semibold">
+              <span
+                className="ml-auto text-[9px] px-1.5 py-0.5 rounded-full font-semibold"
+                style={{
+                  background: "var(--mf-accent-muted)",
+                  color: "var(--mf-accent-text)",
+                }}
+              >
                 ON
               </span>
             )}
@@ -158,6 +186,16 @@ const MoreMenu: React.FC<{ items: MoreMenuItem[]; onClose: () => void }> = ({
         ))}
     </div>
   </>
+);
+
+// ── Vertical separator ─────────────────────────────────────────────────────────
+
+const Sep = () => (
+  <div
+    className="h-8 w-px mx-1 shrink-0"
+    style={{ background: "var(--mf-border-medium)" }}
+    aria-hidden
+  />
 );
 
 // ── Props ──────────────────────────────────────────────────────────────────────
@@ -187,7 +225,6 @@ interface MeetingControlsProps {
   pollsPanelOpen: boolean;
   backgroundPanelOpen: boolean;
   devicesPanelOpen: boolean;
-  /** Number of participants waiting to be admitted (host only) */
   waitingCount: number;
 }
 
@@ -253,31 +290,27 @@ const MeetingControls: React.FC<MeetingControlsProps> = ({
   }, [chatPanelOpen, onToggleChat, markChatRead]);
 
   const toggleFullscreen = useCallback(() => {
-    if (!document.fullscreenElement) {
+    if (!document.fullscreenElement)
       document.documentElement.requestFullscreen?.().catch(() => {});
-    } else {
-      document.exitFullscreen?.().catch(() => {});
-    }
+    else document.exitFullscreen?.().catch(() => {});
   }, []);
 
   useEffect(() => {
-    const onChange = () => setIsFullscreen(!!document.fullscreenElement);
-    document.addEventListener("fullscreenchange", onChange);
-    return () => document.removeEventListener("fullscreenchange", onChange);
+    const h = () => setIsFullscreen(!!document.fullscreenElement);
+    document.addEventListener("fullscreenchange", h);
+    return () => document.removeEventListener("fullscreenchange", h);
   }, []);
 
   const handleToggleScreen = useCallback(async () => {
     try {
       await toggleScreen();
     } catch (e: any) {
-      if (e?.name !== "NotAllowedError")
-        console.warn("[MeetFlow] Screen share error:", e);
+      if (e?.name !== "NotAllowedError") console.warn(e);
     }
   }, [toggleScreen]);
 
-  // Keyboard shortcuts: M · D · S · H · F · T · Space(PTT)
   useEffect(() => {
-    const onKeyDown = (e: KeyboardEvent) => {
+    const kd = (e: KeyboardEvent) => {
       const t = e.target as HTMLElement;
       if (
         t.tagName === "INPUT" ||
@@ -321,7 +354,7 @@ const MeetingControls: React.FC<MeetingControlsProps> = ({
           break;
       }
     };
-    const onKeyUp = (e: KeyboardEvent) => {
+    const ku = (e: KeyboardEvent) => {
       if (e.code === "Space" && pttRef.current) {
         const t = e.target as HTMLElement;
         if (
@@ -335,11 +368,11 @@ const MeetingControls: React.FC<MeetingControlsProps> = ({
         }
       }
     };
-    window.addEventListener("keydown", onKeyDown);
-    window.addEventListener("keyup", onKeyUp);
+    window.addEventListener("keydown", kd);
+    window.addEventListener("keyup", ku);
     return () => {
-      window.removeEventListener("keydown", onKeyDown);
-      window.removeEventListener("keyup", onKeyUp);
+      window.removeEventListener("keydown", kd);
+      window.removeEventListener("keyup", ku);
     };
   }, [
     toggleMic,
@@ -351,7 +384,6 @@ const MeetingControls: React.FC<MeetingControlsProps> = ({
     micEnabled,
   ]);
 
-  // More menu items
   const moreItems: MoreMenuItem[] = [
     {
       icon: <Subtitles className="h-3.5 w-3.5" />,
@@ -400,7 +432,6 @@ const MeetingControls: React.FC<MeetingControlsProps> = ({
     },
   ];
 
-  // Whether the "More" button should be highlighted (any sub-feature active)
   const moreActive =
     transcription.enabled ||
     background.mode !== "none" ||
@@ -408,177 +439,200 @@ const MeetingControls: React.FC<MeetingControlsProps> = ({
     pip.isActive;
 
   return (
-    <div className="shrink-0 flex items-center justify-between px-4 py-2.5 gap-3 bg-[#0e0e12] border-t border-white/[0.06] relative">
-      {/* ── LEFT: media toggles ───────────────────────────────────────── */}
-      <div className="flex items-end gap-2">
-        <ControlBtn
-          onClick={() => toggleMic()}
-          active={micEnabled}
-          label={micEnabled ? "Mute (M)" : "Unmute (M)"}
-          className={!micEnabled ? "!bg-red-500/15" : undefined}
-        >
-          {micEnabled ? (
-            <Mic className="h-5 w-5" />
-          ) : (
-            <MicOff className="h-5 w-5 text-red-400" />
-          )}
-        </ControlBtn>
+    /* Floating bar container — 10px bottom margin, full width */
+    <div
+      className="shrink-0 px-3 pb-3 pt-0"
+      style={{ background: "var(--mf-bg-base)" }}
+    >
+      <div
+        className="flex items-center justify-between px-4 py-2 relative"
+        style={{
+          background: "var(--mf-ctrl-bg)",
+          border: "1px solid var(--mf-border-medium)",
+          borderRadius: "var(--mf-radius-xl)",
+          boxShadow: "var(--mf-shadow-md)",
+          backdropFilter: "blur(20px) saturate(160%)",
+          WebkitBackdropFilter: "blur(20px) saturate(160%)",
+          minHeight: "68px",
+        }}
+      >
+        {/* ── LEFT: media controls ──────────────────────────────────── */}
+        <div className="flex items-end gap-1.5">
+          <ControlBtn
+            onClick={() => toggleMic()}
+            active={micEnabled}
+            muted={!micEnabled}
+            label={micEnabled ? "Mute (M)" : "Unmute (M)"}
+          >
+            {micEnabled ? (
+              <Mic className="h-5 w-5" />
+            ) : (
+              <MicOff className="h-5 w-5" />
+            )}
+          </ControlBtn>
 
-        <ControlBtn
-          onClick={() => toggleCamera()}
-          active={cameraEnabled}
-          label={cameraEnabled ? "Stop video (D)" : "Start video (D)"}
-          className={!cameraEnabled ? "!bg-red-500/15" : undefined}
-        >
-          {cameraEnabled ? (
-            <Video className="h-5 w-5" />
-          ) : (
-            <VideoOff className="h-5 w-5 text-red-400" />
-          )}
-        </ControlBtn>
+          <ControlBtn
+            onClick={() => toggleCamera()}
+            active={cameraEnabled}
+            muted={!cameraEnabled}
+            label={cameraEnabled ? "Stop video (D)" : "Start video (D)"}
+          >
+            {cameraEnabled ? (
+              <Video className="h-5 w-5" />
+            ) : (
+              <VideoOff className="h-5 w-5" />
+            )}
+          </ControlBtn>
 
-        <ControlBtn
-          onClick={handleToggleScreen}
-          active={screenEnabled}
-          label={screenEnabled ? "Stop sharing (S)" : "Share screen (S)"}
-          className={screenEnabled ? "!bg-primary-500/20" : undefined}
-        >
-          {screenEnabled ? (
-            <MonitorOff className="h-5 w-5 text-primary-400" />
-          ) : (
-            <Monitor className="h-5 w-5" />
-          )}
-        </ControlBtn>
-      </div>
+          <ControlBtn
+            onClick={handleToggleScreen}
+            active={screenEnabled}
+            label={screenEnabled ? "Stop sharing (S)" : "Share screen (S)"}
+          >
+            {screenEnabled ? (
+              <MonitorOff className="h-5 w-5" />
+            ) : (
+              <Monitor className="h-5 w-5" />
+            )}
+          </ControlBtn>
+        </div>
 
-      {/* ── CENTER: timer + title ─────────────────────────────────────── */}
-      <div className="flex flex-col items-center gap-0.5 min-w-0 flex-1">
-        <span className="text-white font-mono text-sm font-semibold tabular-nums tracking-tight">
-          {timerText}
-        </span>
-        <div className="flex items-center gap-1.5">
-          {isRecording && (
-            <span className="h-1.5 w-1.5 rounded-full bg-red-500 animate-pulse" />
-          )}
-          <span className="text-white/35 text-[10px] truncate max-w-[180px]">
-            {meetingTitle}
+        <Sep />
+
+        {/* ── CENTER: timer + title ─────────────────────────────────── */}
+        <div className="flex flex-col items-center gap-0.5 min-w-0 flex-1 px-3">
+          <span
+            className="font-mono text-[14px] font-semibold tabular-nums tracking-tight"
+            style={{ color: "var(--mf-text-primary)" }}
+          >
+            {timerText}
           </span>
+          <div className="flex items-center gap-1.5">
+            {isRecording && (
+              <span
+                className="h-1.5 w-1.5 rounded-full"
+                style={{
+                  background: "var(--mf-danger)",
+                  animation: "mf-live-dot 1.2s ease infinite",
+                }}
+              />
+            )}
+            <span
+              className="text-[10px] font-medium truncate max-w-[160px]"
+              style={{ color: "var(--mf-text-muted)" }}
+            >
+              {meetingTitle}
+            </span>
+          </div>
+        </div>
+
+        <Sep />
+
+        {/* ── RIGHT: secondary controls ─────────────────────────────── */}
+        <div className="flex items-end gap-1.5">
+          <ControlBtn
+            onClick={toggleHand}
+            active={handRaised}
+            label={handRaised ? "Lower hand (H)" : "Raise hand (H)"}
+          >
+            <Hand className="h-5 w-5" />
+          </ControlBtn>
+
+          {/* Reactions */}
+          <div className="relative">
+            {reactionPickerOpen && (
+              <ReactionPicker
+                onSelect={sendReaction}
+                onClose={() => setReactionPickerOpen(false)}
+              />
+            )}
+            <ControlBtn
+              onClick={() => setReactionPickerOpen((v) => !v)}
+              active={reactionPickerOpen}
+              label="Reactions"
+            >
+              <Smile className="h-5 w-5" />
+            </ControlBtn>
+          </div>
+
+          {/* More */}
+          <div className="relative">
+            {moreMenuOpen && (
+              <MoreMenu
+                items={moreItems}
+                onClose={() => setMoreMenuOpen(false)}
+              />
+            )}
+            <ControlBtn
+              onClick={() => setMoreMenuOpen((v) => !v)}
+              active={moreMenuOpen || moreActive}
+              label="More"
+            >
+              <ChevronUp
+                className={clsx(
+                  "h-4 w-4 transition-transform duration-150",
+                  moreMenuOpen && "rotate-180",
+                )}
+              />
+            </ControlBtn>
+          </div>
+
+          <ControlBtn
+            onClick={onToggleParticipants}
+            active={participantsPanelOpen}
+            label="Participants"
+            badge={participants.length}
+            badgeDot={role === "host" && waitingCount > 0}
+          >
+            <Users className="h-5 w-5" />
+          </ControlBtn>
+
+          <ControlBtn
+            onClick={handleToggleChat}
+            active={chatPanelOpen}
+            label="Chat"
+            badge={!chatPanelOpen ? unreadChatCount : 0}
+            badgeDot={!chatPanelOpen && unreadChatCount > 0}
+          >
+            <MessageSquare className="h-5 w-5" />
+          </ControlBtn>
+
+          <ControlBtn
+            onClick={onLayoutToggle}
+            label={layout === "speaker" ? "Grid view" : "Speaker view"}
+          >
+            {layout === "speaker" ? (
+              <LayoutGrid className="h-5 w-5" />
+            ) : (
+              <LayoutList className="h-5 w-5" />
+            )}
+          </ControlBtn>
+
+          <ControlBtn
+            onClick={toggleFullscreen}
+            label={isFullscreen ? "Exit fullscreen (F)" : "Fullscreen (F)"}
+          >
+            {isFullscreen ? (
+              <Minimize2 className="h-5 w-5" />
+            ) : (
+              <Maximize2 className="h-5 w-5" />
+            )}
+          </ControlBtn>
+
+          <Sep />
+
+          {role === "host" && (
+            <ControlBtn onClick={onEndForEveryone} danger label="End">
+              <Square className="h-4 w-4 fill-white" />
+            </ControlBtn>
+          )}
+
+          <ControlBtn onClick={onLeave} danger label="Leave">
+            <PhoneOff className="h-5 w-5" />
+          </ControlBtn>
         </div>
       </div>
 
-      {/* ── RIGHT: secondary controls ─────────────────────────────────── */}
-      <div className="flex items-end gap-2">
-        {/* Raise hand */}
-        <ControlBtn
-          onClick={toggleHand}
-          active={handRaised}
-          label={handRaised ? "Lower hand (H)" : "Raise hand (H)"}
-          className={handRaised ? "!bg-amber-500/20" : undefined}
-        >
-          <Hand className={clsx("h-5 w-5", handRaised && "text-amber-400")} />
-        </ControlBtn>
-
-        {/* Emoji reactions */}
-        <div className="relative">
-          {reactionPickerOpen && (
-            <ReactionPicker
-              onSelect={sendReaction}
-              onClose={() => setReactionPickerOpen(false)}
-            />
-          )}
-          <ControlBtn
-            onClick={() => setReactionPickerOpen((v) => !v)}
-            active={reactionPickerOpen}
-            label="Reactions"
-          >
-            <Smile className="h-5 w-5" />
-          </ControlBtn>
-        </div>
-
-        {/* More menu */}
-        <div className="relative">
-          {moreMenuOpen && (
-            <MoreMenu
-              items={moreItems}
-              onClose={() => setMoreMenuOpen(false)}
-            />
-          )}
-          <ControlBtn
-            onClick={() => setMoreMenuOpen((v) => !v)}
-            active={moreMenuOpen || moreActive}
-            label="More options"
-          >
-            <ChevronUp
-              className={clsx(
-                "h-4 w-4 transition-transform duration-150",
-                moreMenuOpen && "rotate-180",
-              )}
-            />
-          </ControlBtn>
-        </div>
-
-        {/* Participants — badge shows count + amber dot if waiting (host) */}
-        <ControlBtn
-          onClick={onToggleParticipants}
-          active={participantsPanelOpen}
-          label="Participants"
-          badge={participants.length}
-          badgeDot={role === "host" && waitingCount > 0}
-        >
-          <Users className="h-5 w-5" />
-        </ControlBtn>
-
-        {/* Chat — unread dot when closed */}
-        <ControlBtn
-          onClick={handleToggleChat}
-          active={chatPanelOpen}
-          label="Chat"
-          badge={!chatPanelOpen ? unreadChatCount : 0}
-          badgeDot={!chatPanelOpen && unreadChatCount > 0}
-        >
-          <MessageSquare className="h-5 w-5" />
-        </ControlBtn>
-
-        {/* Layout toggle */}
-        <ControlBtn
-          onClick={onLayoutToggle}
-          label={layout === "speaker" ? "Grid view" : "Speaker view"}
-        >
-          {layout === "speaker" ? (
-            <LayoutGrid className="h-5 w-5" />
-          ) : (
-            <LayoutList className="h-5 w-5" />
-          )}
-        </ControlBtn>
-
-        {/* Fullscreen */}
-        <ControlBtn
-          onClick={toggleFullscreen}
-          label={isFullscreen ? "Exit fullscreen (F)" : "Fullscreen (F)"}
-        >
-          {isFullscreen ? (
-            <Minimize2 className="h-5 w-5" />
-          ) : (
-            <Maximize2 className="h-5 w-5" />
-          )}
-        </ControlBtn>
-
-        <div className="h-8 w-px bg-white/[0.08] mx-1" />
-
-        {/* End for everyone (host only) */}
-        {role === "host" && (
-          <ControlBtn onClick={onEndForEveryone} danger label="End meeting">
-            <Square className="h-4 w-4 fill-white" />
-          </ControlBtn>
-        )}
-
-        {/* Leave */}
-        <ControlBtn onClick={onLeave} danger label="Leave">
-          <PhoneOff className="h-5 w-5" />
-        </ControlBtn>
-      </div>
-
-      {/* Click-outside for reaction picker */}
       {reactionPickerOpen && (
         <div
           className="fixed inset-0 z-[-1]"

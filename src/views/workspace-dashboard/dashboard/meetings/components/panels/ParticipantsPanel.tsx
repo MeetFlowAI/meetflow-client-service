@@ -34,7 +34,7 @@ import {
 import clsx from "clsx";
 import PanelHeader from "../shared/PanelHeader";
 import ConnectionQualityIndicator from "../room/ConnectionQualityIndicator";
-import { useMeetingData } from "../../context/MeetingDataContext";
+import { useMeetingData } from "../../context/useMeetingData";
 import {
   getParticipantColor,
   getParticipantInitials,
@@ -115,8 +115,11 @@ const ParticipantRowInner: React.FC<ParticipantRowProps> = ({
             {name}
           </span>
           {isHost && (
-            <span title="Host" className="flex items-center">
-              <Crown className="h-3 w-3 text-amber-400" />
+            <span
+              className="text-[10px] text-white/35 leading-none shrink-0"
+              title="Host"
+            >
+              <Crown className="h-3.5 w-3.5" />
             </span>
           )}
           {isLocal && (
@@ -136,22 +139,33 @@ const ParticipantRowInner: React.FC<ParticipantRowProps> = ({
       <div className="flex items-center gap-1.5 shrink-0">
         <ConnectionQualityIndicator participant={participant} />
         {isMicMuted ? (
-          <span title="Mic muted">
-            <MicOff className="h-3.5 w-3.5 text-red-400" />
+          <span
+            className="flex items-center gap-1.5 text-red-400"
+            title="Mic muted"
+          >
+            <MicOff className="h-3.5 w-3.5" />
           </span>
         ) : (
-          <span title="Mic unmuted">
-            {" "}
-            <Mic className="h-3.5 w-3.5 text-white/30" />
+          <span
+            className="flex items-center gap-1.5 text-white/30"
+            title="Mic on"
+          >
+            <Mic className="h-3.5 w-3.5" />
           </span>
         )}
         {isCamMuted ? (
-          <span title="Camera off">
-            <VideoOff className="h-3.5 w-3.5 text-red-400" />
+          <span
+            className="flex items-center gap-1.5 text-red-400"
+            title="Camera off"
+          >
+            <VideoOff className="h-3.5 w-3.5" />
           </span>
         ) : (
-          <span title="Camera on">
-            <Video className="h-3.5 w-3.5 text-white/30" />
+          <span
+            className="flex items-center gap-1.5 text-white/30"
+            title="Camera on"
+          >
+            <Video className="h-3.5 w-3.5" />
           </span>
         )}
 

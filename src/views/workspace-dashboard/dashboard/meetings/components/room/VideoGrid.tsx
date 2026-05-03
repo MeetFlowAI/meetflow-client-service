@@ -23,7 +23,7 @@ import {
 import { Users } from "lucide-react";
 import clsx from "clsx";
 import ParticipantTile from "./ParticipantTile";
-import { useMeetingData } from "../../context/MeetingDataContext";
+import { useMeetingData } from "../../context/useMeetingData";
 
 export type MeetingLayout = "speaker" | "grid";
 

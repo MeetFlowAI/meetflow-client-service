@@ -25,14 +25,19 @@
  * require host authority (validated by checking sender === hostIdentity).
  */
 
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useRef, useEffect } from "react";
 import { useDataChannel, useLocalParticipant } from "@livekit/components-react";
 import type { ReceivedDataMessage } from "@livekit/components-core";
 import axiosConfig from "@/lib/axios";
 
 export interface UseHostControlsReturn {
   muteAll: () => void;
-  removeParticipant: (identity: string, meetingId: number, workspaceId: number, channelId: number) => Promise<void>;
+  removeParticipant: (
+    identity: string,
+    meetingId: number,
+    workspaceId: number,
+    channelId: number,
+  ) => Promise<void>;
   spotlightParticipant: (identity: string | null) => void;
   isLockedRef: React.MutableRefObject<boolean>;
   toggleLock: () => void;
@@ -65,7 +70,9 @@ export function useHostControls(
           isLockedRef.current = !!data.locked;
           onLockChange(!!data.locked);
         }
-      } catch { /* ignore */ }
+      } catch {
+        /* ignore */
+      }
     },
     [onMuteAll, onSpotlight, onLockChange],
   );
@@ -77,10 +84,11 @@ export function useHostControls(
   }, [send]);
 
   const broadcast = useCallback((payload: object) => {
-    sendRef.current?.(
-      new TextEncoder().encode(JSON.stringify(payload)),
-      { reliable: true },
-    ).catch(() => {});
+    sendRef
+      .current?.(new TextEncoder().encode(JSON.stringify(payload)), {
+        reliable: true,
+      })
+      .catch(() => {});
   }, []);
 
   const muteAll = useCallback(() => {
@@ -88,7 +96,12 @@ export function useHostControls(
   }, [broadcast, localParticipant.identity]);
 
   const removeParticipant = useCallback(
-    async (identity: string, meetingId: number, workspaceId: number, channelId: number) => {
+    async (
+      identity: string,
+      meetingId: number,
+      workspaceId: number,
+      channelId: number,
+    ) => {
       try {
         await axiosConfig.post(
           `/workspace/${workspaceId}/channels/${channelId}/meetings/${meetingId}/remove-participant`,
@@ -115,5 +128,11 @@ export function useHostControls(
     broadcast({ type: "lock", locked: next, from: localParticipant.identity });
   }, [broadcast, localParticipant.identity, onLockChange]);
 
-  return { muteAll, removeParticipant, spotlightParticipant, isLockedRef, toggleLock };
+  return {
+    muteAll,
+    removeParticipant,
+    spotlightParticipant,
+    isLockedRef,
+    toggleLock,
+  };
 }

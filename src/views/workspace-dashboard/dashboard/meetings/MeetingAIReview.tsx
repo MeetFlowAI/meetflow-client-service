@@ -28,6 +28,8 @@ export default function MeetingAIReview() {
     queryFn: () =>
       getAIMeetingTasksRequest(selectedWorkspaceId!, channelId!, meetingId!),
     enabled: !!selectedWorkspaceId && !!channelId && !!meetingId,
+    staleTime: 60_000,  // Tasks don't change — don't refetch on focus
+    gcTime: 300_000,
   });
 
   const reviewMutation = useMutation({

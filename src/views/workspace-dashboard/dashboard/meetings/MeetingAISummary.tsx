@@ -23,6 +23,15 @@ export default function MeetingAISummary() {
     queryFn: () =>
       getAIMeetingSummaryRequest(selectedWorkspaceId!, channelId!, meetingId!),
     enabled: !!selectedWorkspaceId && !!channelId && !!meetingId,
+    staleTime: 30_000,
+    retry: false,
+    // Auto-poll every 10s while summary not ready (ai_status still processing)
+    refetchInterval: (query) => {
+      // If we have a summary, stop polling — done
+      if (query.state.data) return false;
+      // If the API returned a 404/error, keep polling — still processing
+      return 10_000;
+    },
   });
 
   if (isLoading)

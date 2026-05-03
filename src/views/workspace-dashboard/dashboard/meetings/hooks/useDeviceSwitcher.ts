@@ -10,7 +10,7 @@
  */
 
 import { useState, useEffect, useCallback } from "react";
-import { useRoomContext } from "@livekit/components-react";
+import { useLocalParticipant, useRoomContext } from "@livekit/components-react";
 
 export interface MediaDevice {
   deviceId: string;
@@ -31,6 +31,7 @@ export interface UseDeviceSwitcherReturn {
 }
 
 export function useDeviceSwitcher(): UseDeviceSwitcherReturn {
+  const { localParticipant } = useLocalParticipant();
   const room = useRoomContext();
 
   const [cameras, setCameras] = useState<MediaDevice[]>([]);
@@ -48,73 +49,109 @@ export function useDeviceSwitcher(): UseDeviceSwitcherReturn {
         const devices = await navigator.mediaDevices.enumerateDevices();
         setCameras(
           devices
-            .filter(d => d.kind === "videoinput")
-            .map((d, i) => ({ deviceId: d.deviceId, label: d.label || `Camera ${i + 1}` })),
+            .filter((d) => d.kind === "videoinput")
+            .map((d, i) => ({
+              deviceId: d.deviceId,
+              label: d.label || `Camera ${i + 1}`,
+            })),
         );
         setMicrophones(
           devices
-            .filter(d => d.kind === "audioinput")
-            .map((d, i) => ({ deviceId: d.deviceId, label: d.label || `Microphone ${i + 1}` })),
+            .filter((d) => d.kind === "audioinput")
+            .map((d, i) => ({
+              deviceId: d.deviceId,
+              label: d.label || `Microphone ${i + 1}`,
+            })),
         );
         setSpeakers(
           devices
-            .filter(d => d.kind === "audiooutput")
-            .map((d, i) => ({ deviceId: d.deviceId, label: d.label || `Speaker ${i + 1}` })),
+            .filter((d) => d.kind === "audiooutput")
+            .map((d, i) => ({
+              deviceId: d.deviceId,
+              label: d.label || `Speaker ${i + 1}`,
+            })),
         );
-      } catch { /* silent */ }
+      } catch {
+        /* silent */
+      }
     };
     enumerate();
     navigator.mediaDevices.addEventListener("devicechange", enumerate);
-    return () => navigator.mediaDevices.removeEventListener("devicechange", enumerate);
+    return () =>
+      navigator.mediaDevices.removeEventListener("devicechange", enumerate);
   }, []);
 
-  // Read active device IDs from current room state
+  // Read active device IDs from current tracks
   useEffect(() => {
-    setActiveCameraId(room.getActiveDevice("videoinput") ?? null);
-    setActiveMicId(room.getActiveDevice("audioinput") ?? null);
-    setActiveSpeakerId(room.getActiveDevice("audiooutput") ?? null);
-  }, [room]);
+    const camTrack = localParticipant.getTrackPublication("camera" as any);
+    const micTrack = localParticipant.getTrackPublication("microphone" as any);
+    const camDeviceId =
+      (
+        camTrack?.track?.mediaStreamTrack as MediaStreamTrack | undefined
+      )?.getSettings()?.deviceId ?? null;
+    const micDeviceId =
+      (
+        micTrack?.track?.mediaStreamTrack as MediaStreamTrack | undefined
+      )?.getSettings()?.deviceId ?? null;
+    setActiveCameraId(camDeviceId);
+    setActiveMicId(micDeviceId);
+  }, [localParticipant]);
 
-  const switchCamera = useCallback(async (deviceId: string) => {
-    setIsSwitching(true);
-    try {
-      await room.switchActiveDevice("videoinput", deviceId);
-      setActiveCameraId(room.getActiveDevice("videoinput") ?? deviceId);
-    } catch (e) {
-      console.error("[MeetFlow] Camera switch failed:", e);
-    } finally {
-      setIsSwitching(false);
-    }
-  }, [room]);
+  const switchCamera = useCallback(
+    async (deviceId: string) => {
+      setIsSwitching(true);
+      try {
+        await room.switchActiveDevice("videoinput", deviceId);
+        setActiveCameraId(deviceId);
+      } catch (e) {
+        console.error("[MeetFlow] Camera switch failed:", e);
+      } finally {
+        setIsSwitching(false);
+      }
+    },
+    [room],
+  );
 
-  const switchMicrophone = useCallback(async (deviceId: string) => {
-    setIsSwitching(true);
-    try {
-      await room.switchActiveDevice("audioinput", deviceId);
-      setActiveMicId(room.getActiveDevice("audioinput") ?? deviceId);
-    } catch (e) {
-      console.error("[MeetFlow] Mic switch failed:", e);
-    } finally {
-      setIsSwitching(false);
-    }
-  }, [room]);
+  const switchMicrophone = useCallback(
+    async (deviceId: string) => {
+      setIsSwitching(true);
+      try {
+        await room.switchActiveDevice("audioinput", deviceId);
+        setActiveMicId(deviceId);
+      } catch (e) {
+        console.error("[MeetFlow] Mic switch failed:", e);
+      } finally {
+        setIsSwitching(false);
+      }
+    },
+    [room],
+  );
 
-  const switchSpeaker = useCallback(async (deviceId: string) => {
-    setIsSwitching(true);
-    try {
-      await room.switchActiveDevice("audiooutput", deviceId);
-      setActiveSpeakerId(room.getActiveDevice("audiooutput") ?? deviceId);
-    } catch (e) {
-      console.error("[MeetFlow] Speaker switch failed:", e);
-    } finally {
-      setIsSwitching(false);
-    }
-  }, [room]);
+  const switchSpeaker = useCallback(
+    async (deviceId: string) => {
+      setIsSwitching(true);
+      try {
+        await room.switchActiveDevice("audiooutput", deviceId);
+        setActiveSpeakerId(deviceId);
+      } catch (e) {
+        console.error("[MeetFlow] Speaker switch failed:", e);
+      } finally {
+        setIsSwitching(false);
+      }
+    },
+    [room],
+  );
 
   return {
-    cameras, microphones, speakers,
-    activeCameraId, activeMicId, activeSpeakerId,
-    switchCamera, switchMicrophone, switchSpeaker,
+    cameras,
+    microphones,
+    speakers,
+    activeCameraId,
+    activeMicId,
+    activeSpeakerId,
+    switchCamera,
+    switchMicrophone,
+    switchSpeaker,
     isSwitching,
   };
 }

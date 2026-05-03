@@ -9,7 +9,7 @@
  */
 
 import React, { type JSX } from "react";
-import { useMeetingData } from "../../context/MeetingDataContext";
+import { useMeetingData } from "../../context/useMeetingData";
 
 // Keyframes injected once into the document via a style tag.
 // Using dangerouslySetInnerHTML is safe here since the content is static.

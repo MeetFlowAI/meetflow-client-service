@@ -13,9 +13,7 @@
  */
 
 import React, {
-  createContext,
   useCallback,
-  useContext,
   useEffect,
   useRef,
   useState,
@@ -33,6 +31,7 @@ import {
   useTrackToggle,
 } from "@livekit/components-react";
 import type { IStartMeetingResponse } from "@/services/workspace-dashboard/meetings";
+import { MeetingDataContext } from "./MeetingDataContextValue";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -84,16 +83,7 @@ export interface MeetingDataContextValue {
 }
 
 // ── Context ────────────────────────────────────────────────────────────────────
-
-const MeetingDataContext = createContext<MeetingDataContextValue | null>(null);
-
-// eslint-disable-next-line react-refresh/only-export-components
-export function useMeetingData(): MeetingDataContextValue {
-  const ctx = useContext(MeetingDataContext);
-  if (!ctx)
-    throw new Error("useMeetingData must be used inside MeetingDataProvider");
-  return ctx;
-}
+// Context is defined in MeetingDataContextValue.ts for Fast Refresh compliance
 
 const REACTION_TTL = 3500;
 
@@ -127,8 +117,11 @@ export const MeetingDataProvider: React.FC<Props> = ({
         if (!id) return;
         setRaisedHands((prev) => {
           const n = new Set(prev);
-          if (data.raised) n.add(id);
-          else n.delete(id);
+          if (data.raised) {
+            n.add(id);
+          } else {
+            n.delete(id);
+          }
           return n;
         });
       } catch {

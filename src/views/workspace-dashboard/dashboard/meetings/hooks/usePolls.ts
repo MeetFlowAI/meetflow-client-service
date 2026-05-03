@@ -54,52 +54,53 @@ export function usePolls(): UsePollsReturn {
 
   // Store send ref to avoid stale closures
   const sendRef = useRef<
-    ((payload: Uint8Array, options: { reliable: boolean }) => Promise<void>) | null
+    | ((payload: Uint8Array, options: { reliable: boolean }) => Promise<void>)
+    | null
   >(null);
 
-  const onPollMessage = useCallback(
-    (msg: ReceivedDataMessage<"mf-polls">) => {
-      try {
-        const data = JSON.parse(new TextDecoder().decode(msg.payload));
+  const onPollMessage = useCallback((msg: ReceivedDataMessage<"mf-polls">) => {
+    try {
+      const data = JSON.parse(new TextDecoder().decode(msg.payload));
 
-        if (data.type === "poll-create") {
-          setActivePoll(data.poll as Poll);
-          setMyVote(null);
-        }
+      if (data.type === "poll-create") {
+        setActivePoll(data.poll as Poll);
+        setMyVote(null);
+      }
 
-        if (data.type === "poll-vote") {
-          const { pollId, optionId, voterIdentity } = data;
-          setActivePoll((prev) => {
-            if (!prev || prev.id !== pollId) return prev;
-            return {
-              ...prev,
-              options: prev.options.map((opt) => {
-                if (opt.id !== optionId) {
-                  // Remove voter from other options (change-vote support)
-                  return { ...opt, votes: opt.votes.filter((v) => v !== voterIdentity) };
-                }
-                if (opt.votes.includes(voterIdentity)) return opt;
-                return { ...opt, votes: [...opt.votes, voterIdentity] };
-              }),
-            };
-          });
-        }
+      if (data.type === "poll-vote") {
+        const { pollId, optionId, voterIdentity } = data;
+        setActivePoll((prev) => {
+          if (!prev || prev.id !== pollId) return prev;
+          return {
+            ...prev,
+            options: prev.options.map((opt) => {
+              if (opt.id !== optionId) {
+                // Remove voter from other options (change-vote support)
+                return {
+                  ...opt,
+                  votes: opt.votes.filter((v) => v !== voterIdentity),
+                };
+              }
+              if (opt.votes.includes(voterIdentity)) return opt;
+              return { ...opt, votes: [...opt.votes, voterIdentity] };
+            }),
+          };
+        });
+      }
 
-        if (data.type === "poll-end") {
-          setActivePoll((prev) =>
-            prev && prev.id === data.pollId ? { ...prev, ended: true } : prev,
-          );
-          // Auto-dismiss ended poll after 8s
-          setTimeout(() => {
-            setActivePoll((prev) =>
-              prev?.id === data.pollId ? null : prev,
-            );
-          }, 8000);
-        }
-      } catch { /* ignore */ }
-    },
-    [],
-  );
+      if (data.type === "poll-end") {
+        setActivePoll((prev) =>
+          prev && prev.id === data.pollId ? { ...prev, ended: true } : prev,
+        );
+        // Auto-dismiss ended poll after 8s
+        setTimeout(() => {
+          setActivePoll((prev) => (prev?.id === data.pollId ? null : prev));
+        }, 8000);
+      }
+    } catch {
+      /* ignore */
+    }
+  }, []);
 
   const { send } = useDataChannel("mf-polls", onPollMessage);
 
@@ -108,10 +109,11 @@ export function usePolls(): UsePollsReturn {
   }, [send]);
 
   const broadcast = useCallback((payload: object) => {
-    sendRef.current?.(
-      new TextEncoder().encode(JSON.stringify(payload)),
-      { reliable: true },
-    ).catch(() => {});
+    sendRef
+      .current?.(new TextEncoder().encode(JSON.stringify(payload)), {
+        reliable: true,
+      })
+      .catch(() => {});
   }, []);
 
   const createPoll = useCallback(

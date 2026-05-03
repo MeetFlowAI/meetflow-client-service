@@ -26,7 +26,7 @@
  *     body: { identity: string }
  */
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { RoomEvent } from "livekit-client";
 import type { ReceivedDataMessage } from "@livekit/components-core";
 import {
@@ -66,8 +66,10 @@ export interface UseWaitingRoomReturn {
 export function useWaitingRoom(role: "host" | "guest"): UseWaitingRoomReturn {
   const room = useRoomContext();
   const { localParticipant } = useLocalParticipant();
-  const [waitingParticipants, setWaitingParticipants] = useState<WaitingParticipant[]>([]);
-  const isWaiting = role === "guest" && localParticipant.permissions?.canPublish === false;
+  const [waitingParticipants, setWaitingParticipants] = useState<
+    WaitingParticipant[]
+  >([]);
+  const [isWaiting, setIsWaiting] = useState(false);
 
   const sendRef = useRef<
     ((p: Uint8Array, o: { reliable: boolean }) => Promise<void>) | null
@@ -80,8 +82,8 @@ export function useWaitingRoom(role: "host" | "guest"): UseWaitingRoomReturn {
 
         if (data.type === "waiting-announce" && role === "host") {
           // A guest is waiting — add to the list
-          setWaitingParticipants((prev: WaitingParticipant[]) => {
-            const exists = prev.find((p: WaitingParticipant) => p.identity === data.identity);
+          setWaitingParticipants((prev) => {
+            const exists = prev.find((p) => p.identity === data.identity);
             if (exists) return prev;
             return [
               ...prev,
@@ -99,6 +101,7 @@ export function useWaitingRoom(role: "host" | "guest"): UseWaitingRoomReturn {
           data.identity === localParticipant.identity
         ) {
           // WE have been admitted
+          setIsWaiting(false);
         }
 
         if (
@@ -109,10 +112,13 @@ export function useWaitingRoom(role: "host" | "guest"): UseWaitingRoomReturn {
           room.disconnect();
         }
 
-        if ((data.type === "admitted" || data.type === "denied") && role === "host") {
+        if (
+          (data.type === "admitted" || data.type === "denied") &&
+          role === "host"
+        ) {
           // Remove from waiting list
-          setWaitingParticipants((prev: WaitingParticipant[]) =>
-            prev.filter((p: WaitingParticipant) => p.identity !== data.identity),
+          setWaitingParticipants((prev) =>
+            prev.filter((p) => p.identity !== data.identity),
           );
         }
       } catch {
@@ -130,39 +136,44 @@ export function useWaitingRoom(role: "host" | "guest"): UseWaitingRoomReturn {
 
   // Guest announces themselves to host on connect
   useEffect(() => {
-    if (role !== "guest") return;
+    if (role !== "guest") {
+      return;
+    }
 
     // Check if we have publish permission — if not, we are in the waiting room
     const canPublish = localParticipant.permissions?.canPublish ?? true;
-    if (canPublish) return;
-
-    const announce = () => {
-      sendRef.current?.(
-        new TextEncoder().encode(
-          JSON.stringify({
-            type: "waiting-announce",
-            identity: localParticipant.identity,
-            name: localParticipant.name ?? localParticipant.identity,
-          }),
-        ),
-        { reliable: true },
-      ).catch(() => {});
-    };
-
-    // Announce immediately + retry in case host wasn't ready
-    const t1 = setTimeout(announce, 500);
-    const t2 = setTimeout(announce, 2500);
-    return () => {
-      clearTimeout(t1);
-      clearTimeout(t2);
-    };
+    if (!canPublish) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setIsWaiting(true);
+      const announce = () => {
+        sendRef
+          .current?.(
+            new TextEncoder().encode(
+              JSON.stringify({
+                type: "waiting-announce",
+                identity: localParticipant.identity,
+                name: localParticipant.name ?? localParticipant.identity,
+              }),
+            ),
+            { reliable: true },
+          )
+          .catch(() => {});
+      };
+      // Announce immediately + retry in case host wasn't ready
+      const t1 = setTimeout(announce, 500);
+      const t2 = setTimeout(announce, 2500);
+      return () => {
+        clearTimeout(t1);
+        clearTimeout(t2);
+      };
+    }
   }, [role, localParticipant]);
 
   // Remove waiting participant when they fully disconnect
   useEffect(() => {
-    const onDisconnect = (p: { identity?: string }) => {
-      setWaitingParticipants((prev: WaitingParticipant[]) =>
-        prev.filter((wp: WaitingParticipant) => wp.identity !== p.identity),
+    const onDisconnect = (p: any) => {
+      setWaitingParticipants((prev) =>
+        prev.filter((wp) => wp.identity !== p.identity),
       );
     };
 
@@ -173,10 +184,11 @@ export function useWaitingRoom(role: "host" | "guest"): UseWaitingRoomReturn {
   }, [room]);
 
   const broadcast = useCallback((payload: object) => {
-    sendRef.current?.(
-      new TextEncoder().encode(JSON.stringify(payload)),
-      { reliable: true },
-    ).catch(() => {});
+    sendRef
+      .current?.(new TextEncoder().encode(JSON.stringify(payload)), {
+        reliable: true,
+      })
+      .catch(() => {});
   }, []);
 
   const admit = useCallback(
@@ -192,8 +204,8 @@ export function useWaitingRoom(role: "host" | "guest"): UseWaitingRoomReturn {
           { identity },
         );
         broadcast({ type: "admitted", identity });
-        setWaitingParticipants((prev: WaitingParticipant[]) =>
-          prev.filter((p: WaitingParticipant) => p.identity !== identity),
+        setWaitingParticipants((prev) =>
+          prev.filter((p) => p.identity !== identity),
         );
       } catch (e) {
         console.error("[MeetFlow] Admit failed:", e);
@@ -215,8 +227,8 @@ export function useWaitingRoom(role: "host" | "guest"): UseWaitingRoomReturn {
           { identity },
         );
         broadcast({ type: "denied", identity });
-        setWaitingParticipants((prev: WaitingParticipant[]) =>
-          prev.filter((p: WaitingParticipant) => p.identity !== identity),
+        setWaitingParticipants((prev) =>
+          prev.filter((p) => p.identity !== identity),
         );
       } catch (e) {
         console.error("[MeetFlow] Deny failed:", e);

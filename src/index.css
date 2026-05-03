@@ -4,6 +4,7 @@
 
 @import "stream-chat-react/dist/css/v2/index.css";
 @import './views/workspace-dashboard/dashboard/channels/components/chat/stream-chat-override.css';
+@import './views/workspace-dashboard/dashboard/meetings/meeting.css';
 
 @custom-variant dark (&:is(.dark *));
 

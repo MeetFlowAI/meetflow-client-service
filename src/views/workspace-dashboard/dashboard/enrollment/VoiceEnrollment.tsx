@@ -11,7 +11,7 @@
  *  Step 5 — Done: show quality score and next steps
  */
 
-import { useState, useRef, useCallback, type JSX } from "react";
+import { useState, useRef, useCallback, useEffect, type JSX } from "react";
 import { useNavigate } from "react-router-dom";
 import { useMutation } from "@tanstack/react-query";
 import {
@@ -71,6 +71,26 @@ export default function VoiceEnrollment(): JSX.Element {
   const chunksRef = useRef<Blob[]>([]);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const startTimeRef = useRef<number>(0);
+
+  // ── Cleanup: release microphone on unmount ────────────────────────────────
+  // Prevents mic staying open when user navigates away mid-recording
+  useEffect(() => {
+    return () => {
+      if (mediaRecorderRef.current) {
+        try {
+          mediaRecorderRef.current.stream
+            ?.getTracks()
+            .forEach((t) => t.stop());
+          if (mediaRecorderRef.current.state !== "inactive") {
+            mediaRecorderRef.current.stop();
+          }
+        } catch {
+          // already stopped — safe to ignore
+        }
+      }
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+  }, []);
 
   // ── Recording logic ──────────────────────────────────────────────────────────
 

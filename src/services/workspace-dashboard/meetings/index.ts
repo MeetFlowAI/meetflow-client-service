@@ -33,6 +33,7 @@ export interface IMeeting {
     | "pending_review"
     | "completed"
     | "failed";
+  ai_stage?: string | null;
   ai_meeting_id?: string | null;
   recording_url?: string | null;
 }
@@ -217,6 +218,11 @@ export interface IReviewPayload {
   }>;
 }
 
+export interface IAIStageStatus {
+  ai_status: string;
+  ai_stage: string | null;
+}
+
 // ─── AI Intelligence service calls ────────────────────────────────────────────
 
 export const getAIMeetingStatusRequest = (
@@ -224,6 +230,17 @@ export const getAIMeetingStatusRequest = (
   channelId: number | string,
   meetingId: number | string,
 ): Promise<IAIStatus> =>
+  axiosConfig
+    .get(
+      `/workspace/${workspaceId}/channels/${channelId}/meetings/${meetingId}/ai-status`,
+    )
+    .then((r) => r.data.data);
+
+export const getAIMeetingStageStatusRequest = (
+  workspaceId: number | string,
+  channelId: number | string,
+  meetingId: number | string,
+): Promise<IAIStageStatus> =>
   axiosConfig
     .get(
       `/workspace/${workspaceId}/channels/${channelId}/meetings/${meetingId}/ai-status`,
