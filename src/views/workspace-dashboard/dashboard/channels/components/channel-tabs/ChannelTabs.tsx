@@ -7,12 +7,12 @@
 
 import React, { type JSX } from "react";
 import clsx from "clsx";
-import { MessageSquare, Users, Video } from "lucide-react";
+import { MessageSquare, Users, Video, CheckSquare } from "lucide-react";
 import { typography } from "@/theme/typography";
 
 // ----------------------------------------------------------------------
 
-export type ChannelTab = "chat" | "members" | "meetings";
+export type ChannelTab = "chat" | "members" | "meetings" | "tasks";
 
 interface TabConfig {
   id: ChannelTab;
@@ -24,6 +24,7 @@ const TABS: TabConfig[] = [
   { id: "chat", label: "Chat", icon: MessageSquare },
   { id: "members", label: "Members", icon: Users },
   { id: "meetings", label: "Meetings", icon: Video },
+  { id: "tasks", label: "Tasks", icon: CheckSquare },
 ];
 
 // ----------------------------------------------------------------------
@@ -32,6 +33,7 @@ interface ChannelTabsProps {
   active: ChannelTab;
   onChange: (tab: ChannelTab) => void;
   memberCount?: number;
+  taskCount?: number;
 }
 
 // ----------------------------------------------------------------------
@@ -40,6 +42,7 @@ const ChannelTabs: React.FC<ChannelTabsProps> = ({
   active,
   onChange,
   memberCount,
+  taskCount,
 }): JSX.Element => (
   /* Outer strip — sits between header and content, provides the base bg line */
   <div
@@ -67,7 +70,9 @@ const ChannelTabs: React.FC<ChannelTabsProps> = ({
         const displayLabel =
           id === "members" && memberCount !== undefined
             ? `${label} · ${memberCount}`
-            : label;
+            : id === "tasks" && taskCount !== undefined && taskCount > 0
+              ? `${label} · ${taskCount}`
+              : label;
 
         return (
           <button
