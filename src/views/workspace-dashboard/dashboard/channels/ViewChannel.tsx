@@ -49,6 +49,7 @@ import ChannelTabs, {
 import ChannelChat from "./components/chat/ChannelChat";
 import ChannelMembers from "./components/members/ChannelMembers";
 import ChannelMeetings from "./components/meetings/ChannelMeetings";
+import ChannelTasks from "./components/tasks/ChannelTasks";
 
 // ── Area 3: Real meeting overlay (replaces MeetingOverlayStub) ────────────────
 import MeetingOverlay from "@/views/workspace-dashboard/dashboard/meetings/MeetingOverlay";
@@ -65,6 +66,7 @@ const ViewChannel = (): JSX.Element => {
   const [meetingSession, setMeetingSession] =
     useState<IStartMeetingResponse | null>(null);
   const [meetingLoading, setMeetingLoading] = useState(false);
+  const [taskCount, setTaskCount] = useState(0);
 
   // ── Data fetching ────────────────────────────────────────────────────
   const { data: channel, isLoading: channelLoading } = useQuery({
@@ -215,6 +217,7 @@ const ViewChannel = (): JSX.Element => {
           active={activeTab}
           onChange={setActiveTab}
           memberCount={(members ?? []).length}
+          taskCount={taskCount}
         />
 
         <div className="flex flex-1 min-h-0 overflow-hidden">
@@ -236,6 +239,13 @@ const ViewChannel = (): JSX.Element => {
               meetingLoading={meetingLoading}
               onStartMeeting={handleStartMeeting}
               onJoinMeeting={handleJoinMeeting}
+            />
+          )}
+          {activeTab === "tasks" && selectedWorkspaceId && (
+            <ChannelTasks
+              workspaceId={selectedWorkspaceId}
+              channelId={parseInt(id!)}
+              onTaskCountChange={setTaskCount}
             />
           )}
         </div>
