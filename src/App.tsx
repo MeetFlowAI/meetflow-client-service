@@ -7,10 +7,12 @@ import { QueryClientProvider } from "@tanstack/react-query";
 
 /* Local Imports */
 import { ThemeContextProvider } from "@/context/ThemeContext";
-import ThemeModeSetting from "@/components/ThemeModeSetting";
-import { queryClient } from "@/config/queryClientConfig";
+// import ThemeModeSetting from "@/components/themeModeSetting";
 import { Toaster } from "@/components/ui/sonner";
-import { TooltipProvider } from "./components/ui/tooltip";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { queryClient } from "@/lib/queryClient";
+import { SessionProvider } from "@/context/SessionContext";
+import Routing from "@/routes";
 
 // ----------------------------------------------------------------------
 
@@ -24,11 +26,15 @@ const App: React.FC = (): JSX.Element => {
   return (
     <TooltipProvider>
       <ThemeContextProvider defaultTheme="dark" storageKey="vite-ui-theme">
-        <ThemeModeSetting />
-        <QueryClientProvider client={queryClient}>
-          <Router>{/* Routes */}</Router>
-          <Toaster />
-        </QueryClientProvider>
+        <SessionProvider>
+          {/* <ThemeModeSetting /> */}
+          <QueryClientProvider client={queryClient}>
+            <Router>
+              <Routing />
+            </Router>
+            <Toaster />
+          </QueryClientProvider>
+        </SessionProvider>
       </ThemeContextProvider>
     </TooltipProvider>
   );
