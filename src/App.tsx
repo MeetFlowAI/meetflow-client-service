@@ -7,7 +7,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 
 /* Local Imports */
 import { ThemeContextProvider } from "@/context/ThemeContext";
-import ThemeModeSetting from "@/components/themeModeSetting";
+// import ThemeModeSetting from "@/components/themeModeSetting";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { queryClient } from "@/lib/queryClient";
@@ -27,7 +27,7 @@ const App: React.FC = (): JSX.Element => {
     <TooltipProvider>
       <ThemeContextProvider defaultTheme="dark" storageKey="vite-ui-theme">
         <SessionProvider>
-          <ThemeModeSetting />
+          {/* <ThemeModeSetting /> */}
           <QueryClientProvider client={queryClient}>
             <Router>
               <Routing />
