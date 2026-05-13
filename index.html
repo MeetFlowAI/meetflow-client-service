@@ -2,9 +2,33 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>v2</title>
+    <meta name="description" content="MeetFlow — Collaborative meeting platform" />
+
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>MeetFlow</title>
+
+    <!--
+      Phase 1: Flash-of-wrong-theme prevention script.
+      This blocking script must run before any CSS loads.
+      It reads localStorage and sets the correct class on <html>
+      before the page paints, preventing a flash of the wrong theme.
+
+      Uncomment in Phase 1 when ThemeProvider is implemented:
+
+    <script>
+      (function () {
+        var THEME_KEY = "meetflow-theme";
+        try {
+          var stored = localStorage.getItem(THEME_KEY);
+          var prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+          var isDark =
+            stored === "dark" || ((!stored || stored === "system") && prefersDark);
+          document.documentElement.classList.toggle("dark", isDark);
+        } catch (e) {}
+      })();
+    </script>
+    -->
   </head>
   <body>
     <div id="root"></div>
