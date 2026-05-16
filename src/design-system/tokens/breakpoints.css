@@ -1,0 +1,28 @@
+/* ============================================================
+   MeetFlow V2 — Breakpoint Tokens
+   Source: ShopPulse Figma screen dimensions (375/768/1440)
+
+   BREAKPOINT STRATEGY:
+     Tailwind defaults (sm/md/lg/xl) are kept as-is for
+     general responsive utilities. Only 2xl is overridden to
+     match our 1440px desktop canvas — the primary design target.
+
+     The --breakpoint-* CSS properties are documentation
+     tokens for use in JS (see semantic/breakpoints.ts).
+     CSS media queries always use Tailwind utility prefixes.
+
+   TAILWIND SCREEN MAP (after @theme override):
+     sm:   640px  → small adjustments, not a primary pivot
+     md:   768px  → tablet: 2-column layout, collapsed nav
+     lg:   1024px → intermediate desktop
+     xl:   1280px → standard desktop
+     2xl:  1440px → our primary design canvas (overridden)
+   ============================================================ */
+
+:root {
+  /* Documentation tokens — read in JS via semantic/breakpoints.ts */
+  /* Never use these in CSS — use Tailwind sm:/md:/lg:/xl: prefixes */
+  --breakpoint-mobile: 375px;
+  --breakpoint-tablet: 768px;
+  --breakpoint-desktop: 1440px;
+}

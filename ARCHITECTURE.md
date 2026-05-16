@@ -147,3 +147,29 @@ Reversing this direction at any point is an architectural violation.
 
 See `ROADMAP.md` for the complete phase sequence.
 Current phase is tracked in the branch name: `platform/phase-X-*` or `feature/*`.
+
+## Token Governance
+
+### Adding a new color token
+
+1. Add raw value to `--palette-*` in `colors.css` if the color is new
+2. Add semantic alias in `:root {}` block with a descriptive name
+3. Add `.dark {}` override — every light token MUST have a dark override
+4. Add `--color-*: var(--)` entry to the `@theme inline` block in `src/index.css`
+5. Never use `--palette-*` tokens directly in components — always the semantic alias
+
+### Adding a new radius / shadow / spacing token
+
+Only add tokens the design system explicitly specifies. Do not add tokens for
+one-off values — use Tailwind arbitrary values (`rounded-[10px]`) for single uses.
+
+### Modifying existing token values
+
+Change the value in the token file only. Every component using that token
+updates automatically. Never hunt for hex values in component files.
+
+### Dark mode
+
+Every semantic color token has a `.dark` override in `colors.css`.
+Shadows have a `.dark` override in `shadows.css`.
+Radius, spacing, animation, and typography tokens do NOT change between modes.

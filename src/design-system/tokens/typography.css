@@ -1,0 +1,124 @@
+/* ============================================================
+   MeetFlow V2 — Typography Tokens
+   Source: ShopPulse — Inter (body) + Plus Jakarta Sans (heading)
+           + JetBrains Mono (code/data)
+
+   FONT LOADING STRATEGY:
+     Development: Google Fonts CDN (zero setup)
+     Production: Self-hosted from public/fonts/ (performance)
+
+     To switch to self-hosted:
+       1. Download Inter Variable + Plus Jakarta Sans Variable
+          + JetBrains Mono from Google Fonts
+       2. Place .woff2 files in public/fonts/
+       3. Uncomment the @font-face blocks below
+       4. Remove the Google Fonts @import
+   ============================================================ */
+
+/* ── Google Fonts CDN (development / quick start) ───────────────────────── */
+/* @import url("https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Plus+Jakarta+Sans:wght@200..800&family=JetBrains+Mono:wght@100..800&display=swap"); */
+
+/* ── Self-hosted (production — uncomment when fonts are in public/fonts/) ── */
+@font-face {
+  font-family: "Inter";
+  src: url("/fonts/inter-variable.woff2") format("woff2-variations");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Plus Jakarta Sans";
+  src: url("/fonts/plus-jakarta-sans-variable.woff2") format("woff2-variations");
+  font-weight: 200 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "JetBrains Mono";
+  src: url("/fonts/jetbrains-mono-variable.woff2") format("woff2-variations");
+  font-weight: 100 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ── Font Family Tokens ─────────────────────────────────────────────────── */
+:root {
+  --font-body: "Inter", system-ui, sans-serif;
+  --font-heading: "Plus Jakarta Sans", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+}
+
+/* ── Font Weight Tokens ─────────────────────────────────────────────────── */
+:root {
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  --font-weight-extrabold: 800;
+}
+
+/* ── Line Height Tokens ─────────────────────────────────────────────────── */
+:root {
+  --leading-none: 1;
+  --leading-tight: 1.25;
+  --leading-snug: 1.375;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.625;
+  --leading-loose: 2;
+}
+
+/* ── Letter Spacing Tokens ──────────────────────────────────────────────── */
+:root {
+  --tracking-tight: -0.025em;
+  --tracking-normal: 0em;
+  --tracking-wide: 0.025em;
+  --tracking-wider: 0.05em;
+  --tracking-widest: 0.1em;
+}
+
+/* ── Semantic Typography Utilities ──────────────────────────────────────── */
+/* These utility classes mirror the sp-* classes from the ShopPulse system  */
+/* and map directly to the semantic typography.ts constants.                 */
+:root {
+  /* Documented for reference — usage goes through typography.ts constants  */
+  /* and Tailwind utilities, not these raw variables.                        */
+
+  /* Body scale (Inter) */
+  --text-scale-detail: 10px;
+  /* sp-detail: fine print, legal */
+  --text-scale-caption: 12px;
+  /* sp-caption: labels, metadata */
+  --text-scale-body-sm: 13px;
+  /* sp-body-sm: compact body text */
+  --text-scale-body-md: 14px;
+  /* primary content text */
+  --text-scale-body-lg: 16px;
+  /* large body, descriptions */
+  --text-scale-body-xl: 20px;
+  /* oversized body */
+
+  /* Heading scale (Plus Jakarta Sans) */
+  --text-scale-overline: 10px;
+  /* sp-overline: ALL CAPS section labels */
+  --text-scale-h6: 14px;
+  /* smallest heading */
+  --text-scale-h5: 16px;
+  --text-scale-h4: 18px;
+  --text-scale-h3: 20px;
+  --text-scale-h2: 24px;
+  --text-scale-h1: 30px;
+  --text-scale-display: 36px;
+
+  /* Data / KPI scale (JetBrains Mono — tabular, for numbers) */
+  --text-scale-data-xs: 10px;
+  /* sp-data-xs: compact metric */
+  --text-scale-data-sm: 12px;
+  --text-scale-data-md: 16px;
+  --text-scale-data-lg: 20px;
+  --text-scale-kpi-sm: 24px;
+  --text-scale-kpi-md: 32px;
+  --text-scale-kpi-lg: 40px;
+  --text-scale-kpi-hero: 56px;
+}

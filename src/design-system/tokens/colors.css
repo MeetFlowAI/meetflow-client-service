@@ -1,0 +1,462 @@
+/* ============================================================
+   MeetFlow V2 — Color Tokens
+   Source: ShopPulse Figma System (adapted + normalized)
+
+   ARCHITECTURE:
+     Tier 1  --palette-*   Raw values. Never use in components.
+     Tier 2  :root / .dark  Semantic tokens. All component styling
+                            references these names only.
+
+   NAMING RULES:
+     - Semantic names describe PURPOSE, never appearance
+     - Every :root token has a corresponding .dark override
+     - Components use semantic names: bg-primary, not bg-violet-600
+   ============================================================ */
+
+/* ── TIER 1: RAW PALETTE ────────────────────────────────────────────────────
+   These are the primitive values that semantic tokens reference.
+   They exist for traceability only — no component should use --palette-*
+   directly. Add/remove raw stops here when the brand palette changes.
+   ────────────────────────────────────────────────────────────────────────── */
+
+:root {
+  /* Violet (Brand) */
+  --palette-violet-50: #f5f3ff;
+  --palette-violet-100: #ede9fe;
+  --palette-violet-200: #ddd6fe;
+  --palette-violet-300: #c4b5fd;
+  --palette-violet-400: #a78bfa;
+  --palette-violet-500: #8b5cf6;
+  --palette-violet-600: #7c3aed;
+  --palette-violet-700: #6d28d9;
+  --palette-violet-800: #5b21b6;
+  --palette-violet-900: #4c1d95;
+  --palette-violet-950: #2e1065;
+
+  /* Zinc (Neutral) */
+  --palette-zinc-50: #fafafa;
+  --palette-zinc-100: #f4f4f5;
+  --palette-zinc-200: #e4e4e7;
+  --palette-zinc-300: #d4d4d8;
+  --palette-zinc-400: #a1a1aa;
+  --palette-zinc-500: #71717a;
+  --palette-zinc-600: #52525b;
+  --palette-zinc-700: #3f3f46;
+  --palette-zinc-800: #27272a;
+  --palette-zinc-900: #18181b;
+  --palette-zinc-950: #09090b;
+
+  /* Red (Destructive) */
+  --palette-red-50: #fef2f2;
+  --palette-red-100: #fee2e2;
+  --palette-red-200: #fecaca;
+  --palette-red-400: #f87171;
+  --palette-red-500: #ef4444;
+  --palette-red-600: #dc2626;
+  --palette-red-700: #b91c1c;
+  --palette-red-900: #7f1d1d;
+  --palette-red-950: #450a0a;
+
+  /* Green (Success) */
+  --palette-green-50: #f0fdf4;
+  --palette-green-100: #dcfce7;
+  --palette-green-200: #bbf7d0;
+  --palette-green-300: #86efac;
+  --palette-green-400: #4ade80;
+  --palette-green-500: #22c55e;
+  --palette-green-600: #16a34a;
+  --palette-green-700: #15803d;
+  --palette-green-900: #14532d;
+  --palette-green-950: #052e16;
+
+  /* Amber (Warning) */
+  --palette-amber-50: #fffbeb;
+  --palette-amber-100: #fef3c7;
+  --palette-amber-200: #fde68a;
+  --palette-amber-400: #fbbf24;
+  --palette-amber-500: #f59e0b;
+  --palette-amber-600: #d97706;
+  --palette-amber-700: #b45309;
+  --palette-amber-900: #78350f;
+  --palette-amber-950: #451a03;
+
+  /* Blue (Emphasis/Info) */
+  --palette-blue-50: #eff6ff;
+  --palette-blue-100: #dbeafe;
+  --palette-blue-200: #bfdbfe;
+  --palette-blue-400: #60a5fa;
+  --palette-blue-500: #3b82f6;
+  --palette-blue-600: #2563eb;
+  --palette-blue-700: #1d4ed8;
+  --palette-blue-900: #1e3a5f;
+  --palette-blue-950: #172554;
+
+  /* Extended palette */
+  --palette-cyan-500: #06b6d4;
+  --palette-cyan-600: #0891b2;
+  --palette-rose-500: #f43f5e;
+  --palette-rose-600: #e11d48;
+  --palette-pink-400: #f472b6;
+  --palette-pink-500: #ec4899;
+  --palette-pink-600: #db2777;
+  --palette-white: #ffffff;
+  --palette-black: #000000;
+}
+
+/* ── TIER 2: SEMANTIC TOKENS — LIGHT MODE (default) ─────────────────────────
+   ────────────────────────────────────────────────────────────────────────── */
+
+:root {
+  /* ── Page surfaces ───────────────────────────────────────────────────── */
+  --background: #fafafa; /* page background */
+  --foreground: #09090b; /* primary text */
+  --foreground-subtle: #71717a; /* secondary/muted text */
+
+  /* ── Card & Popover ──────────────────────────────────────────────────── */
+  --card: #ffffff;
+  --card-foreground: #09090b;
+  --card-subtle: #fafafa; /* alternate card, slightly darker */
+  --card-subtle-foreground: #71717a;
+  --popover: #ffffff;
+  --popover-foreground: #09090b;
+
+  /* ── Primary (brand action color) ───────────────────────────────────── */
+  --primary: #7c3aed;
+  --primary-foreground: #ffffff;
+  --primary-hover: #6d28d9;
+  --primary-subtle: #f5f3ff;
+  --primary-subtle-foreground: #7c3aed;
+  --primary-border: #8b5cf6;
+  --primary-10: rgba(124, 58, 237, 0.1);
+  --primary-20: rgba(124, 58, 237, 0.2);
+
+  /* ── Secondary ───────────────────────────────────────────────────────── */
+  --secondary: #e4e4e7;
+  --secondary-foreground: #18181b;
+  --secondary-hover: #d4d4d8;
+
+  /* ── Accent (hover backgrounds, subtle highlights) ───────────────────── */
+  --accent: #f4f4f5;
+  --accent-foreground: #18181b;
+  --accent-selected: #d4d4d8;
+
+  /* ── Muted ───────────────────────────────────────────────────────────── */
+  --muted: #f4f4f5;
+  --muted-foreground: #71717a;
+
+  /* ── Border hierarchy ────────────────────────────────────────────────── */
+  --border: #e4e4e7; /* default structural border */
+  --border-subtle: #f4f4f5; /* very light border */
+  --border-strong: #a1a1aa; /* emphasized border */
+  --border-card: rgba(0, 0, 0, 0.06); /* card border with transparency */
+
+  /* ── Input & Form ────────────────────────────────────────────────────── */
+  --input: #ffffff;
+  --input-readonly: #f4f4f5;
+  --ring: #e4e4e7;
+
+  /* ── Semantic ring colors ────────────────────────────────────────────── */
+  --ring-brand: #ddd6fe;
+  --ring-error: #fecaca;
+  --ring-success: #bbf7d0;
+  --ring-warning: #fde68a;
+  --ring-emphasis: #bfdbfe;
+
+  /* ── Ghost & Outline ─────────────────────────────────────────────────── */
+  --ghost: rgba(255, 255, 255, 0.01);
+  --ghost-foreground: #71717a;
+  --ghost-hover: rgba(0, 0, 0, 0.05);
+  --outline: rgba(255, 255, 255, 0.1);
+  --outline-hover: rgba(0, 0, 0, 0.03);
+
+  /* ── Surface levels ──────────────────────────────────────────────────── */
+  --surface-raised: #f4f4f5; /* slightly elevated areas */
+  --surface-inset: #f4f4f5; /* sunken/inset areas */
+  --canvas: #f4f4f5; /* canvas/workspace background */
+
+  /* ── Destructive ─────────────────────────────────────────────────────── */
+  --destructive: #dc2626;
+  --destructive-foreground: #ffffff;
+  --destructive-hover: #b91c1c;
+  --destructive-subtle: #fef2f2;
+  --destructive-subtle-foreground: #dc2626;
+  --destructive-border: #ef4444;
+
+  /* ── Success ─────────────────────────────────────────────────────────── */
+  --success: #16a34a;
+  --success-foreground: #ffffff;
+  --success-subtle: #f0fdf4;
+  --success-subtle-foreground: #16a34a;
+  --success-border: #22c55e;
+
+  /* ── Warning ─────────────────────────────────────────────────────────── */
+  --warning: #d97706;
+  --warning-foreground: #ffffff;
+  --warning-subtle: #fffbeb;
+  --warning-subtle-foreground: #d97706;
+  --warning-border: #f59e0b;
+
+  /* ── Emphasis / Info ─────────────────────────────────────────────────── */
+  --emphasis: #2563eb;
+  --emphasis-foreground: #ffffff;
+  --emphasis-subtle: #eff6ff;
+  --emphasis-subtle-foreground: #2563eb;
+  --emphasis-border: #3b82f6;
+
+  /* ── Brand (distinct from primary for gradient/hero contexts) ────────── */
+  --brand: #7c3aed;
+  --brand-foreground: #ffffff;
+  --brand-hover: #6d28d9;
+  --brand-subtle: #f5f3ff;
+  --brand-subtle-foreground: #7c3aed;
+  --brand-subtle-foreground-hover: #6d28d9;
+  --brand-border: #8b5cf6;
+
+  /* ── Glass ───────────────────────────────────────────────────────────── */
+  --glass-bg: rgba(255, 255, 255, 0.7);
+  --glass-bg-hover: rgba(255, 255, 255, 0.85);
+  --glass-border: rgba(0, 0, 0, 0.08);
+  --glass-border-hover: rgba(0, 0, 0, 0.12);
+
+  /* ── Code ────────────────────────────────────────────────────────────── */
+  --code: #f4f4f5;
+  --code-foreground: #27272a;
+
+  /* ── Sidebar (own elevation context) ────────────────────────────────── */
+  --sidebar-background: #ffffff;
+  --sidebar-foreground: #09090b;
+  --sidebar-primary: #7c3aed;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #f4f4f5;
+  --sidebar-accent-foreground: #71717a;
+  --sidebar-accent-hover: #fafafa;
+  --sidebar-muted: #a1a1aa;
+  --sidebar-border: #e4e4e7;
+  --sidebar-ring: #e4e4e7;
+
+  /* ── Data visualization: chart series ────────────────────────────────── */
+  --chart-1: #7c3aed;
+  --chart-2: #22c55e;
+  --chart-3: #f59e0b;
+  --chart-4: #c4b5fd;
+  --chart-5: #86efac;
+  --chart-6: #fde68a;
+  --chart-7: #0891b2;
+  --chart-8: #e11d48;
+
+  /* Chart area fill gradients (used with Recharts areaChart) */
+  --chart-1-fill-start: rgba(124, 58, 237, 0.35);
+  --chart-1-fill-end: rgba(124, 58, 237, 0);
+  --chart-2-fill-start: rgba(34, 197, 94, 0.3);
+  --chart-2-fill-end: rgba(34, 197, 94, 0);
+  --chart-3-fill-start: rgba(245, 158, 11, 0.3);
+  --chart-3-fill-end: rgba(245, 158, 11, 0);
+  --chart-4-fill-start: rgba(196, 181, 253, 0.3);
+  --chart-4-fill-end: rgba(196, 181, 253, 0);
+
+  /* ── Static data colors (DO NOT change between themes) ──────────────── */
+  /* Use when consistent color identity across light/dark is required      */
+  --static-purple-1: #dab2ff;
+  --static-purple-2: #ad46ff;
+  --static-purple-3: #9810fa;
+  --static-purple-4: #8200db;
+  --static-purple-5: #6e11b0;
+  --static-green-1: #7bf1a8;
+  --static-green-2: #00c951;
+  --static-green-3: #00a63e;
+  --static-green-4: #008236;
+  --static-green-5: #016630;
+  --static-amber-1: #ffd230;
+  --static-amber-2: #fe9a00;
+  --static-amber-3: #e17100;
+  --static-amber-4: #bb4d00;
+  --static-amber-5: #973c00;
+  --static-blue-1: #8ec5ff;
+  --static-blue-2: #2b7fff;
+  --static-blue-3: #155dfc;
+  --static-blue-4: #1447e6;
+  --static-blue-5: #193cb8;
+  --static-teal-1: #46edd5;
+  --static-teal-2: #00bba7;
+  --static-teal-3: #009689;
+  --static-teal-4: #00786f;
+  --static-teal-5: #005f5a;
+  --static-rose-1: #ffa1ad;
+  --static-rose-2: #ff2056;
+  --static-rose-3: #ec003f;
+  --static-rose-4: #c70036;
+  --static-rose-5: #a50036;
+  --static-orange-1: #ffb86a;
+  --static-orange-2: #ff6900;
+  --static-orange-3: #f54a00;
+  --static-orange-4: #ca3500;
+  --static-orange-5: #9f2d00;
+
+  /* ── Utility ─────────────────────────────────────────────────────────── */
+  --backdrop: rgba(0, 0, 0, 0.6);
+  --shadow-color: rgba(0, 0, 0, 0.25);
+  --scrollbar-thumb: rgba(0, 0, 0, 0.15);
+  --scrollbar-thumb-hover: rgba(0, 0, 0, 0.25);
+
+  /* ── Animated border ─────────────────────────────────────────────────── */
+  --border-angle: 0deg;
+}
+
+/* ── TIER 2: SEMANTIC TOKENS — DARK MODE ────────────────────────────────────
+   Only tokens that CHANGE between modes are listed here.
+   Static values (palette, static-*, chart fill math) are not repeated.
+   ────────────────────────────────────────────────────────────────────────── */
+
+.dark {
+  /* ── Page surfaces ───────────────────────────────────────────────────── */
+  --background: #0c0c10;
+  --foreground: #fafafa;
+  --foreground-subtle: #71717a;
+
+  /* ── Card & Popover ──────────────────────────────────────────────────── */
+  --card: #141418;
+  --card-foreground: #fafafa;
+  --card-subtle: #18181b;
+  --card-subtle-foreground: #a1a1aa;
+  --popover: #18181b;
+  --popover-foreground: #fafafa;
+
+  /* ── Primary ─────────────────────────────────────────────────────────── */
+  --primary: #7c3aed; /* same — brand stays consistent */
+  --primary-foreground: #ffffff;
+  --primary-hover: #6d28d9;
+  --primary-subtle: #2e1065;
+  --primary-subtle-foreground: #a78bfa;
+  --primary-border: #8b5cf6;
+  --primary-10: rgba(124, 58, 237, 0.1);
+  --primary-20: rgba(124, 58, 237, 0.2);
+
+  /* ── Secondary ───────────────────────────────────────────────────────── */
+  --secondary: #27272a;
+  --secondary-foreground: #fafafa;
+  --secondary-hover: #18181b;
+
+  /* ── Accent ──────────────────────────────────────────────────────────── */
+  --accent: #27272a;
+  --accent-foreground: #fafafa;
+  --accent-selected: #3f3f46;
+
+  /* ── Muted ───────────────────────────────────────────────────────────── */
+  --muted: #27272a;
+  --muted-foreground: #a1a1aa;
+
+  /* ── Border hierarchy ────────────────────────────────────────────────── */
+  --border: #27272a;
+  --border-subtle: rgba(255, 255, 255, 0.06);
+  --border-strong: #52525b;
+  --border-card: rgba(255, 255, 255, 0.06);
+
+  /* ── Input & Form ────────────────────────────────────────────────────── */
+  --input: #18181b;
+  --input-readonly: #27272a;
+  --ring: #27272a;
+
+  /* ── Semantic ring colors ────────────────────────────────────────────── */
+  --ring-brand: #4c1d95;
+  --ring-error: #7f1d1d;
+  --ring-success: #14532d;
+  --ring-warning: #78350f;
+  --ring-emphasis: #1e3a5f;
+
+  /* ── Ghost & Outline ─────────────────────────────────────────────────── */
+  --ghost: rgba(0, 0, 0, 0.01);
+  --ghost-foreground: #a1a1aa;
+  --ghost-hover: rgba(255, 255, 255, 0.06);
+  --outline: rgba(255, 255, 255, 0.04);
+  --outline-hover: rgba(255, 255, 255, 0.08);
+
+  /* ── Surface levels ──────────────────────────────────────────────────── */
+  --surface-raised: rgba(255, 255, 255, 0.06);
+  --surface-inset: rgba(255, 255, 255, 0.04);
+  --canvas: #18181b;
+
+  /* ── Destructive ─────────────────────────────────────────────────────── */
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+  --destructive-hover: #dc2626;
+  --destructive-subtle: rgba(239, 68, 68, 0.1);
+  --destructive-subtle-foreground: #f87171;
+  --destructive-border: #ef4444;
+
+  /* ── Success ─────────────────────────────────────────────────────────── */
+  --success: #22c55e;
+  --success-foreground: #ffffff;
+  --success-subtle: rgba(34, 197, 94, 0.1);
+  --success-subtle-foreground: #4ade80;
+  --success-border: #22c55e;
+
+  /* ── Warning ─────────────────────────────────────────────────────────── */
+  --warning: #f59e0b;
+  --warning-foreground: #ffffff;
+  --warning-subtle: rgba(245, 158, 11, 0.1);
+  --warning-subtle-foreground: #fbbf24;
+  --warning-border: #f59e0b;
+
+  /* ── Emphasis / Info ─────────────────────────────────────────────────── */
+  --emphasis: #3b82f6;
+  --emphasis-foreground: #ffffff;
+  --emphasis-subtle: rgba(59, 130, 246, 0.1);
+  --emphasis-subtle-foreground: #60a5fa;
+  --emphasis-border: #3b82f6;
+
+  /* ── Brand ───────────────────────────────────────────────────────────── */
+  --brand: #7c3aed;
+  --brand-foreground: #ffffff;
+  --brand-hover: #6d28d9;
+  --brand-subtle: #2e1065;
+  --brand-subtle-foreground: #a78bfa;
+  --brand-subtle-foreground-hover: #c4b5fd;
+  --brand-border: #7c3aed;
+
+  /* ── Glass ───────────────────────────────────────────────────────────── */
+  --glass-bg: rgba(255, 255, 255, 0.03);
+  --glass-bg-hover: rgba(255, 255, 255, 0.05);
+  --glass-border: rgba(255, 255, 255, 0.06);
+  --glass-border-hover: rgba(255, 255, 255, 0.1);
+
+  /* ── Code ────────────────────────────────────────────────────────────── */
+  --code: #18181b;
+  --code-foreground: #e4e4e7;
+
+  /* ── Sidebar ─────────────────────────────────────────────────────────── */
+  --sidebar-background: #18181b;
+  --sidebar-foreground: #f4f4f5;
+  --sidebar-primary: #8b5cf6;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #27272a;
+  --sidebar-accent-foreground: #f4f4f5;
+  --sidebar-accent-hover: #09090b;
+  --sidebar-muted: #71717a;
+  --sidebar-border: #27272a;
+  --sidebar-ring: #09090b;
+
+  /* ── Chart ───────────────────────────────────────────────────────────── */
+  --chart-1: #a78bfa;
+  --chart-2: #4ade80;
+  --chart-3: #fbbf24;
+  --chart-4: #ddd6fe;
+  --chart-5: #bbf7d0;
+  --chart-6: #fef08a;
+  --chart-7: #22d3ee;
+  --chart-8: #fb7185;
+
+  --chart-1-fill-start: rgba(167, 139, 250, 0.35);
+  --chart-1-fill-end: rgba(167, 139, 250, 0);
+  --chart-2-fill-start: rgba(74, 222, 128, 0.3);
+  --chart-2-fill-end: rgba(74, 222, 128, 0);
+  --chart-3-fill-start: rgba(251, 191, 36, 0.3);
+  --chart-3-fill-end: rgba(251, 191, 36, 0);
+  --chart-4-fill-start: rgba(221, 214, 254, 0.3);
+  --chart-4-fill-end: rgba(221, 214, 254, 0);
+
+  /* ── Utility ─────────────────────────────────────────────────────────── */
+  --backdrop: rgba(0, 0, 0, 0.7);
+  --shadow-color: rgba(0, 0, 0, 0.5);
+  --scrollbar-thumb: rgba(255, 255, 255, 0.15);
+  --scrollbar-thumb-hover: rgba(255, 255, 255, 0.25);
+}
