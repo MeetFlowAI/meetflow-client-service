@@ -1,37 +1,54 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="MeetFlow — Collaborative meeting platform" />
 
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <title>MeetFlow</title>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="MeetFlow — Collaborative meeting platform" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <title>MeetFlow</title>
 
-    <!--
-      Phase 1: Flash-of-wrong-theme prevention script.
-      This blocking script must run before any CSS loads.
-      It reads localStorage and sets the correct class on <html>
-      before the page paints, preventing a flash of the wrong theme.
+  <!--
+      Flash-of-wrong-theme (FOUT) Prevention Script
+      ─────────────────────────────────────────────
+      This BLOCKING script must run before any CSS is parsed.
+      It reads localStorage and applies the correct class to <html>
+      synchronously, so the page paints with the correct theme on
+      the very first frame.
 
-      Uncomment in Phase 1 when ThemeProvider is implemented:
+      Without this: the page flashes white in dark mode for ~100ms.
+      With this: no flash, ever.
 
-    <script>
-      (function () {
-        var THEME_KEY = "meetflow-theme";
-        try {
-          var stored = localStorage.getItem(THEME_KEY);
-          var prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-          var isDark =
-            stored === "dark" || ((!stored || stored === "system") && prefersDark);
-          document.documentElement.classList.toggle("dark", isDark);
-        } catch (e) {}
-      })();
-    </script>
+      IMPORTANT:
+        - Keep this as an inline script — do NOT move it to a .js file
+        - Do NOT add defer or async attributes
+        - The storage key must match THEME_STORAGE_KEY in config/constants.ts
     -->
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+  <script>
+    (function () {
+      var THEME_KEY = "meetflow-theme";
+      try {
+        var stored = localStorage.getItem(THEME_KEY);
+        var prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+        var isDark =
+          stored === "dark" ||
+          ((!stored || stored === "system") && prefersDark);
+        if (isDark) {
+          document.documentElement.classList.add("dark");
+          document.documentElement.style.colorScheme = "dark";
+        } else {
+          document.documentElement.style.colorScheme = "light";
+        }
+      } catch (e) {
+        // localStorage unavailable — default to light mode silently
+      }
+    })();
+  </script>
+</head>
+
+<body>
+  <div id="root"></div>
+  <script type="module" src="/src/main.tsx"></script>
+</body>
+
 </html>

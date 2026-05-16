@@ -1,40 +1,315 @@
 /* ============================================================
-   MeetFlow V2 — Global Stylesheet
+   MeetFlow V2 — Global Stylesheet + Tailwind Bridge
    
-   IMPORT ORDER (critical — do not reorder):
-   
-   1. Design system tokens  → Phase 1
-      @import "./design-system/tokens/index.css";
-   
-   2. Tailwind base          → this file (active now)
-      @import "tailwindcss";
-   
-   3. @theme bridge          → Phase 1
-      Maps CSS custom properties to Tailwind utility classes.
-      Added here after token imports in Phase 1.
+   STRUCTURE:
+     1. Design system token imports  (CSS custom properties)
+     2. Tailwind base import         (normalize + utilities)
+     3. @theme inline bridge         (tokens → Tailwind utilities)
+     4. Global base styles           (html/body/scrollbar/focus)
    ============================================================ */
 
-/* ── Phase 1: Uncomment when design-system/tokens/index.css is created ──
+/* ── 1. Design System Tokens ────────────────────────────────────────────── */
 @import "./design-system/tokens/index.css";
-*/
 
+/* ── 2. Tailwind CSS v4 ─────────────────────────────────────────────────── */
 @import "tailwindcss";
 
-/* ── Phase 1: @theme inline block is added here after tokens ─────────────
-   Example structure:
-   @theme inline {
-     --color-primary: var(--primary);
-     --color-background: var(--background);
-     ...all token → utility class mappings
-   }
+/* ── 3. Tailwind Theme Bridge ───────────────────────────────────────────── */
+/*
+   Maps CSS custom properties → Tailwind utility classes.
+   
+   HOW IT WORKS:
+     @theme inline { --color-primary: var(--primary); }
+     → Tailwind generates: bg-primary  { background-color: var(--primary); }
+                           text-primary { color: var(--primary); }
+                           border-primary { border-color: var(--primary); }
+     → At runtime, var(--primary) resolves from :root or .dark
+     → Dark mode works automatically via class toggle
+
+   NAMING CONVENTION:
+     Color tokens  → --color-*      → bg-*, text-*, border-*, fill-*, stroke-*
+     Radius tokens → --radius-*     → rounded-*
+     Shadow tokens → --shadow-*     → shadow-*
+     Font tokens   → --font-*       → font-*
+     Spacing tokens → --spacing-*   → p-*, m-*, gap-*, w-*, h-*
+     Animation tokens → --animate-* → animate-*
+     Breakpoints   → --breakpoint-* → sm:, md:, lg:, xl:, 2xl:
 */
 
-/* ── Phase 1: Font face declarations added here after public/fonts/ populated
-   @font-face {
-     font-family: "Inter";
-     src: url("/fonts/inter-variable.woff2") format("woff2");
-     font-weight: 100 900;
-     font-style: normal;
-     font-display: swap;
-   }
-*/
+@theme inline {
+  /* ── Page surfaces ───────────────────────────────────────────────────── */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-foreground-subtle: var(--foreground-subtle);
+
+  /* ── Card & Popover ──────────────────────────────────────────────────── */
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-card-subtle: var(--card-subtle);
+  --color-card-subtle-foreground: var(--card-subtle-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+
+  /* ── Primary ─────────────────────────────────────────────────────────── */
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-subtle: var(--primary-subtle);
+  --color-primary-subtle-foreground: var(--primary-subtle-foreground);
+  --color-primary-border: var(--primary-border);
+
+  /* ── Secondary ───────────────────────────────────────────────────────── */
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary-hover: var(--secondary-hover);
+
+  /* ── Accent & Muted ──────────────────────────────────────────────────── */
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent-selected: var(--accent-selected);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+
+  /* ── Borders & Inputs ────────────────────────────────────────────────── */
+  --color-border: var(--border);
+  --color-border-subtle: var(--border-subtle);
+  --color-border-strong: var(--border-strong);
+  --color-input: var(--input);
+  --color-input-readonly: var(--input-readonly);
+  --color-ring: var(--ring);
+  --color-ring-brand: var(--ring-brand);
+  --color-ring-error: var(--ring-error);
+  --color-ring-success: var(--ring-success);
+  --color-ring-warning: var(--ring-warning);
+
+  /* ── Ghost & Outline ─────────────────────────────────────────────────── */
+  --color-ghost: var(--ghost);
+  --color-ghost-foreground: var(--ghost-foreground);
+  --color-ghost-hover: var(--ghost-hover);
+
+  /* ── Surface levels ──────────────────────────────────────────────────── */
+  --color-surface-raised: var(--surface-raised);
+  --color-surface-inset: var(--surface-inset);
+  --color-canvas: var(--canvas);
+
+  /* ── Status: Destructive ─────────────────────────────────────────────── */
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-destructive-hover: var(--destructive-hover);
+  --color-destructive-subtle: var(--destructive-subtle);
+  --color-destructive-subtle-foreground: var(--destructive-subtle-foreground);
+  --color-destructive-border: var(--destructive-border);
+
+  /* ── Status: Success ─────────────────────────────────────────────────── */
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-success-subtle: var(--success-subtle);
+  --color-success-subtle-foreground: var(--success-subtle-foreground);
+  --color-success-border: var(--success-border);
+
+  /* ── Status: Warning ─────────────────────────────────────────────────── */
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-warning-subtle: var(--warning-subtle);
+  --color-warning-subtle-foreground: var(--warning-subtle-foreground);
+  --color-warning-border: var(--warning-border);
+
+  /* ── Status: Emphasis/Info ───────────────────────────────────────────── */
+  --color-emphasis: var(--emphasis);
+  --color-emphasis-foreground: var(--emphasis-foreground);
+  --color-emphasis-subtle: var(--emphasis-subtle);
+  --color-emphasis-subtle-foreground: var(--emphasis-subtle-foreground);
+  --color-emphasis-border: var(--emphasis-border);
+
+  /* ── Brand ───────────────────────────────────────────────────────────── */
+  --color-brand: var(--brand);
+  --color-brand-foreground: var(--brand-foreground);
+  --color-brand-hover: var(--brand-hover);
+  --color-brand-subtle: var(--brand-subtle);
+  --color-brand-subtle-foreground: var(--brand-subtle-foreground);
+  --color-brand-subtle-foreground-hover: var(--brand-subtle-foreground-hover);
+  --color-brand-border: var(--brand-border);
+
+  /* ── Code ────────────────────────────────────────────────────────────── */
+  --color-code: var(--code);
+  --color-code-foreground: var(--code-foreground);
+
+  /* ── Sidebar ─────────────────────────────────────────────────────────── */
+  --color-sidebar: var(--sidebar-background);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent-hover: var(--sidebar-accent-hover);
+  --color-sidebar-muted: var(--sidebar-muted);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  /* ── Chart series ────────────────────────────────────────────────────── */
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-chart-6: var(--chart-6);
+  --color-chart-7: var(--chart-7);
+  --color-chart-8: var(--chart-8);
+
+  /* ── Utility colors ──────────────────────────────────────────────────── */
+  --color-backdrop: var(--backdrop);
+
+  /* ── Border Radius ───────────────────────────────────────────────────── */
+  /* Overrides Tailwind v4 defaults with our Figma-extracted values        */
+  --radius-none: var(--radius-none);
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+  --radius-lg: var(--radius-lg);
+  --radius-xl: var(--radius-xl);
+  --radius-2xl: var(--radius-2xl);
+  --radius-3xl: var(--radius-3xl);
+  --radius-full: var(--radius-full);
+
+  /* ── Shadows ─────────────────────────────────────────────────────────── */
+  --shadow-xs: var(--shadow-xs);
+  --shadow-sm: var(--shadow-sm);
+  --shadow-md: var(--shadow-md);
+  --shadow-lg: var(--shadow-lg);
+  --shadow-xl: var(--shadow-xl);
+  --shadow-2xl: var(--shadow-2xl);
+  --shadow-inner: var(--shadow-inner);
+  --shadow-card: var(--shadow-card);
+
+  /* ── Font Families ───────────────────────────────────────────────────── */
+  --font-body: var(--font-body);
+  --font-heading: var(--font-heading);
+  --font-mono: var(--font-mono);
+  --font-sans: var(--font-body);
+  /* Tailwind default alias */
+
+  /* ── Named Spacing (extends Tailwind's numeric scale) ────────────────── */
+  /* Creates: p-xs, gap-sm, mx-md, etc. alongside p-4, gap-6 etc.         */
+  --spacing-none: var(--spacing-none);
+  --spacing-4xs: var(--spacing-4xs);
+  --spacing-3xs: var(--spacing-3xs);
+  --spacing-2xs: var(--spacing-2xs);
+  --spacing-xs: var(--spacing-xs);
+  --spacing-sm: var(--spacing-sm);
+  --spacing-md: var(--spacing-md);
+  --spacing-lg: var(--spacing-lg);
+  --spacing-xl: var(--spacing-xl);
+  --spacing-2xl: var(--spacing-2xl);
+  --spacing-3xl: var(--spacing-3xl);
+  --spacing-4xl: var(--spacing-4xl);
+  --spacing-5xl: var(--spacing-5xl);
+  --spacing-6xl: var(--spacing-6xl);
+
+  /* ── Animations ──────────────────────────────────────────────────────── */
+  --animate-accordion-down: var(--animate-accordion-down);
+  --animate-accordion-up: var(--animate-accordion-up);
+  --animate-caret-blink: var(--animate-caret-blink);
+  --animate-page-in: var(--animate-page-in);
+  --animate-fade-up: var(--animate-fade-up);
+  --animate-slide-up: var(--animate-slide-up);
+  --animate-scale-in: var(--animate-scale-in);
+  --animate-fade-in: var(--animate-fade-in);
+  --animate-fade-out: var(--animate-fade-out);
+  --animate-shimmer: var(--animate-shimmer);
+  --animate-spin: var(--animate-spin);
+  --animate-pulse: var(--animate-pulse);
+  --animate-float: var(--animate-float);
+  --animate-border-rotate: var(--animate-border-rotate);
+  --animate-sonner-fade-in: var(--animate-sonner-fade-in);
+  --animate-sonner-fade-out: var(--animate-sonner-fade-out);
+
+  /* ── Breakpoints ─────────────────────────────────────────────────────── */
+  /* Override Tailwind's 2xl (1536px) to match our 1440px design canvas   */
+  --breakpoint-2xl: 1440px;
+}
+
+/* ── 4. Global Base Styles ───────────────────────────────────────────────── */
+
+html {
+  /* Smooth scrolling for anchor navigation */
+  scroll-behavior: smooth;
+  /* Prevent text size adjustment on mobile orientation change */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-body);
+  font-feature-settings:
+    "rlig" 1,
+    "calt" 1;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  /* Prevent layout shift from scrollbar appearing/disappearing */
+  scrollbar-gutter: stable;
+}
+
+/* ── Focus visible (global accessible focus ring) ───────────────────────── */
+/* Individual interactive elements tune this via ring-* utilities,           */
+/* but this provides a global fallback.                                       */
+:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+/* ── Custom scrollbar ────────────────────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: var(--scrollbar-thumb);
+  border-radius: var(--radius-full);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--scrollbar-thumb-hover);
+}
+
+/* ── Selection highlight ─────────────────────────────────────────────────── */
+::selection {
+  background-color: var(--primary-subtle);
+  color: var(--primary);
+}
+
+/* ── Typography defaults for raw HTML elements ───────────────────────────── */
+/* Only applied outside of component-managed content.                         */
+/* In components, always use typography.ts constants via Tailwind utilities.  */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-heading);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--tracking-tight);
+  line-height: var(--leading-tight);
+  color: var(--foreground);
+}
+
+code,
+kbd,
+samp,
+pre {
+  font-family: var(--font-mono);
+}
+
+/* ── Shimmer loading animation (used by AppSkeleton) ────────────────────── */
+.shimmer {
+  background: linear-gradient(90deg, var(--muted) 25%, var(--surface-raised) 50%, var(--muted) 75%);
+  background-size: 200% 100%;
+  animation: var(--animate-shimmer);
+}

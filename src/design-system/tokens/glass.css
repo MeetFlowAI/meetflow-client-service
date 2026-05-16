@@ -1,0 +1,67 @@
+/* ============================================================
+   MeetFlow V2 — Glass / Backdrop Tokens
+   Source: ShopPulse running CSS (light + dark var extraction)
+
+   USAGE BOUNDARIES:
+     ✅ Auth page backgrounds       ✅ Premium feature callouts
+     ✅ Onboarding overlays          ✅ Empty state illustrations
+     ✅ Modal backdrops              ✅ Floating panels
+     ❌ Data-dense dashboard tables  ❌ Repetitive list items
+     ❌ Form inputs                  ❌ Navigation items
+
+   Glass effects are reserved for high-impact, low-frequency
+   surfaces. Overuse destroys the visual effect and creates
+   performance problems on low-end devices (backdrop-filter
+   is GPU-composited).
+
+   Light/dark values are defined in colors.css as part of the
+   semantic token system. These tokens here define the
+   MECHANICAL properties (blur, border-width) that don't change
+   between themes.
+   ============================================================ */
+
+:root {
+  /* ── Blur values (referenced by glass utility classes) ───────────────── */
+  --glass-blur-sm: 8px;
+  --glass-blur-md: 12px; /* default glass effect */
+  --glass-blur-lg: 20px; /* heavy blur for modal overlays */
+  --glass-blur-xl: 40px; /* extreme blur for auth backgrounds */
+
+  /* ── Border width ────────────────────────────────────────────────────── */
+  --glass-border-width: 1px;
+
+  /* ── Saturation (higher = more colorful through the glass) ───────────── */
+  --glass-saturate: 180%;
+
+  /* ── Backdrop (modal scrim behind dialogs/sheets) ────────────────────── */
+  /* Value lives in colors.css as --backdrop, defined per theme */
+}
+
+/* ── Reusable glass utility classes ─────────────────────────────────────── */
+/* Applied to elements that need glassmorphism treatment.                    */
+/* These classes use the semantic color tokens from colors.css               */
+/* so they work in both light and dark mode automatically.                   */
+
+.glass-panel {
+  background-color: var(--glass-bg);
+  border: var(--glass-border-width) solid var(--glass-border);
+  backdrop-filter: blur(var(--glass-blur-md)) saturate(var(--glass-saturate));
+  -webkit-backdrop-filter: blur(var(--glass-blur-md)) saturate(var(--glass-saturate));
+}
+
+.glass-panel:hover {
+  background-color: var(--glass-bg-hover);
+  border-color: var(--glass-border-hover);
+}
+
+.glass-panel-lg {
+  background-color: var(--glass-bg);
+  border: var(--glass-border-width) solid var(--glass-border);
+  backdrop-filter: blur(var(--glass-blur-lg)) saturate(var(--glass-saturate));
+  -webkit-backdrop-filter: blur(var(--glass-blur-lg)) saturate(var(--glass-saturate));
+}
+
+/* ── Modal/dialog backdrop scrim ────────────────────────────────────────── */
+.backdrop-scrim {
+  background-color: var(--backdrop);
+}

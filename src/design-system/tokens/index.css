@@ -1,0 +1,20 @@
+/* ============================================================
+   MeetFlow V2 — Design System Token Barrel
+   
+   This is the ONLY file imported by src/index.css.
+   Import order matters — later files can reference variables
+   defined in earlier files (e.g., shadows.css references
+   --background from colors.css).
+
+   DO NOT import individual token files anywhere else.
+   Always import this barrel file.
+   ============================================================ */
+
+@import "./colors.css";
+@import "./typography.css";
+@import "./spacing.css";
+@import "./radius.css";
+@import "./shadows.css";
+@import "./animation.css";
+@import "./glass.css";
+@import "./breakpoints.css";

@@ -1,0 +1,69 @@
+/* ============================================================
+   MeetFlow V2 — Shadow Tokens
+   Source: ShopPulse running CSS (light-vars.json extraction)
+
+   ELEVATION MODEL:
+     xs  → hairline lift (table rows on hover)
+     sm  → default card elevation
+     md  → dropdown / popover
+     lg  → modal / dialog
+     xl  → sheet / drawer
+     2xl → high-emphasis overlay
+
+   GLOW TOKENS:
+     Used for active navigation items, focused inputs,
+     and live/online status indicators.
+     Never use on every element — reserve for interactive feedback.
+
+   FOCUS RING TOKENS:
+     Accessibility-critical. Applied via Tailwind ring utilities.
+     Every interactive App Component must use one of these.
+   ============================================================ */
+
+:root {
+  /* ── Elevation shadows ───────────────────────────────────────────────── */
+  --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+
+  /* ── Inner shadow (inset, used for pressed states) ───────────────────── */
+  --shadow-inner: inset 0 2px 4px 0 rgba(0, 0, 0, 0.05);
+
+  /* ── Card border-shadow (replaces border on elevated cards) ─────────── */
+  --shadow-card: 0 0 0 1px rgba(0, 0, 0, 0.06), 0 1px 3px 0 rgba(0, 0, 0, 0.08);
+
+  /* ── Glow effects ────────────────────────────────────────────────────── */
+  --glow-brand: 0 0 0 3px rgba(124, 58, 237, 0.2);
+  --glow-success: 0 0 0 3px rgba(34, 197, 94, 0.2);
+  --glow-destructive: 0 0 0 3px rgba(239, 68, 68, 0.2);
+  --glow-emphasis: 0 0 0 3px rgba(59, 130, 246, 0.2);
+
+  /* ── Focus rings (accessibility) ─────────────────────────────────────── */
+  --ring-offset-default: 0 0 0 2px var(--background);
+  --ring-brand-focus: 0 0 0 2px var(--background), 0 0 0 4px var(--primary);
+  --ring-error-focus: 0 0 0 2px var(--background), 0 0 0 4px var(--destructive);
+  --ring-success-focus: 0 0 0 2px var(--background), 0 0 0 4px var(--success);
+}
+
+/* ── Dark mode shadow adjustments ───────────────────────────────────────── */
+/* Shadows are darker in dark mode to maintain visual depth on dark surfaces */
+.dark {
+  --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.4), 0 1px 2px -1px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -2px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -4px rgba(0, 0, 0, 0.4);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.4);
+  --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+
+  --shadow-inner: inset 0 2px 4px 0 rgba(0, 0, 0, 0.3);
+
+  --shadow-card: 0 0 0 1px rgba(255, 255, 255, 0.06), 0 1px 3px 0 rgba(0, 0, 0, 0.4);
+
+  --glow-brand: 0 0 0 3px rgba(124, 58, 237, 0.35);
+  --glow-success: 0 0 0 3px rgba(34, 197, 94, 0.3);
+  --glow-destructive: 0 0 0 3px rgba(239, 68, 68, 0.3);
+  --glow-emphasis: 0 0 0 3px rgba(59, 130, 246, 0.3);
+}

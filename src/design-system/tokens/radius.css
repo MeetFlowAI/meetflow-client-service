@@ -1,0 +1,26 @@
+/* ============================================================
+   MeetFlow V2 — Border Radius Tokens
+   Source: Figma "border radius" variable collection
+
+   NORMALIZATION NOTE:
+     Figma had an unnamed "10" value (10px) sitting between
+     lg (8px) and xl (12px). It does not appear in the running
+     CSS and has no semantic role. It is excluded here.
+     If a component genuinely needs 10px, use arbitrary value
+     rounded-[10px] — do not add a token for a single use case.
+
+   FIGMA → TOKEN MAPPING:
+     none → 0px   sm → 4px   md → 6px   lg → 8px
+     xl   → 12px  2xl → 16px 3xl → 24px full → 9999px
+   ============================================================ */
+
+:root {
+  --radius-none: 0px;
+  --radius-sm: 4px; /* badges, tight chips */
+  --radius-md: 6px; /* small buttons, compact inputs */
+  --radius-lg: 8px; /* default buttons, inputs */
+  --radius-xl: 12px; /* cards, dropdowns, popovers */
+  --radius-2xl: 16px; /* modals, sheets, large cards */
+  --radius-3xl: 24px; /* feature sections, hero cards */
+  --radius-full: 9999px; /* pills, avatars, full-round */
+}
