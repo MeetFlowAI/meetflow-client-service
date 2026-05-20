@@ -5,7 +5,7 @@
     // ── Target ─────────────────────────────────────────────────────────────
     "target": "ES2022",
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
-    "types": ["vite/client"],
+    "types": ["vite/client", "vitest/globals"],
 
     // ── Module resolution ──────────────────────────────────────────────────
     "module": "ESNext",

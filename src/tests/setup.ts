@@ -2,22 +2,24 @@
 // This file runs before every test file via vitest.config.ts setupFiles.
 
 import "@testing-library/jest-dom";
+import { server } from "@/infrastructure/mocks/server";
 
-// ── MSW (Mock Service Worker) ────────────────────────────────────────────────
-// Uncomment in Phase 2 when MSW is configured in infrastructure/mocks/server.ts
-//
-// import { server } from "@/infrastructure/mocks/server";
-//
-// beforeAll(() =>
-//   server.listen({
-//     // Warn on unhandled requests so tests fail clearly when a handler is missing
-//     onUnhandledRequest: "warn",
-//   })
-// );
-//
-// afterEach(() => {
-//   // Reset handlers between tests to prevent state leakage
-//   server.resetHandlers();
-// });
-//
-// afterAll(() => server.close());
+// ── MSW lifecycle ─────────────────────────────────────────────────────────────
+// Start the server before all tests.
+// Reset handlers after each test to prevent state leakage between tests.
+// Stop the server after all tests complete.
+
+beforeAll(() =>
+  server.listen({
+    // "warn" surfaces missing handlers in the console — helpful during development
+    // Switch to "error" in CI to fail tests that make unhandled requests
+    onUnhandledRequest: "warn",
+  })
+);
+
+afterEach(() => {
+  // Removes any runtime handlers added with server.use() in individual tests
+  server.resetHandlers();
+});
+
+afterAll(() => server.close());

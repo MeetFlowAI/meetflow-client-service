@@ -1,15 +1,26 @@
 // ── MeetFlow V2 — Application Root ─────────────────────────────────────────
 //
-// Phase 1: ThemeProvider added. Token smoke test renders in dev only.
-// Phase 2: Wrapped in full <AppProviders> (QueryClient, Router, etc.)
-// Phase 3+: Router outlet renders feature module pages.
+// Phase 2: AppProviders added (ThemeProvider + QueryClient + SessionInit).
+// Phase 3: RouterProvider added inside AppProviders.
+// Phase 9+: Router renders feature module pages.
 
-import { ThemeProvider } from "@/design-system/themes";
+import { AppProviders } from "./providers";
 
 export function App() {
   return (
-    <ThemeProvider defaultTheme="system">
-      <div className="min-h-screen bg-background" />
-    </ThemeProvider>
+    <AppProviders>
+      {/*
+        Phase 3 adds <RouterProvider router={router} /> here.
+        Until then, a placeholder confirms providers are working.
+      */}
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center space-y-2">
+          <h1 className="font-heading text-xl font-semibold text-foreground">MeetFlow V2</h1>
+          <p className="font-body text-sm text-muted-foreground">
+            Phase 2 — Infrastructure Layer complete. Router arrives in Phase 3.
+          </p>
+        </div>
+      </div>
+    </AppProviders>
   );
 }
