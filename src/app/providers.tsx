@@ -8,26 +8,35 @@ import { sessionService } from "@/infrastructure/auth/session.service";
 import { useSessionStore } from "@/store/session.store";
 
 // ── Session initializer ───────────────────────────────────────────────────────
-// Isolated component so the effect only runs once and doesn't re-render
-// the full provider tree.
+// Runs sessionService.initialize() exactly once on app boot.
+// Blocks ALL rendering (including the RouterProvider) until isHydrated = true.
+//
+// WHY block before the router?
+//   Route guards (AuthGuard, GuestGuard, RoleGuard) read isAuthenticated
+//   and role from the session store. If the router renders before hydration
+//   completes, every guard would see isAuthenticated = false and redirect
+//   authenticated users to sign-in on every page load.
+//
+// RESULT:
+//   Guards never need to check isHydrated — by definition, isHydrated is
+//   always true when any guard runs.
 
 function SessionInitializer({ children }: { children: React.ReactNode }) {
   const isHydrated = useSessionStore((s) => s.isHydrated);
 
   useEffect(() => {
-    // Run once on mount — populates session store and sets isHydrated = true
     void sessionService.initialize();
-  }, []); // Empty deps — intentionally runs exactly once
+  }, []); // Empty deps — runs exactly once on mount
 
-  // Block rendering until session is known.
-  // A bare bg-background div matches the page background in both themes —
-  // no flash, no spinner. LoadingState component (Phase 7) replaces this.
+  // Show a bare background-colored div while session hydrates.
+  // No spinner, no skeleton — prevents any flash of incorrect content.
+  // Phase 7 can optionally replace this with a branded splash screen.
   if (!isHydrated) {
     return (
       <div
         className="min-h-screen bg-background"
         aria-hidden="true"
-        data-testid="session-loading"
+        data-testid="session-hydrating"
       />
     );
   }
@@ -36,12 +45,18 @@ function SessionInitializer({ children }: { children: React.ReactNode }) {
 }
 
 // ── Provider composition ──────────────────────────────────────────────────────
-// ORDER MATTERS:
-//   1. ThemeProvider  — outermost so dark class is available to all children
-//   2. QueryClient    — must wrap everything that uses useQuery/useMutation
-//   3. Session init   — must run inside QueryClient (could use queryClient in future)
+// ORDER IS CRITICAL — do not reorder without understanding the implications:
 //
-// Phase 3 adds: RouterProvider wrapping SessionInitializer
+//   1. ThemeProvider    Applies .dark class to <html> before anything renders.
+//                       Must be outermost to prevent flash-of-wrong-theme.
+//
+//   2. QueryClient      Provides TanStack Query context to all children,
+//                       including session service's HTTP calls.
+//
+//   3. SessionInit      Blocks until auth state is resolved. Wraps router
+//                       so guards always see a hydrated session store.
+//
+//   [children]          RouterProvider in App.tsx — renders the route tree.
 
 interface AppProvidersProps {
   children: React.ReactNode;
@@ -53,7 +68,6 @@ export function AppProviders({ children }: AppProvidersProps) {
       <QueryClientProvider client={queryClient}>
         <SessionInitializer>{children}</SessionInitializer>
 
-        {/* React Query DevTools — dev only, tree-shaken in production */}
         {import.meta.env.DEV && (
           <ReactQueryDevtools initialIsOpen={false} buttonPosition="bottom-left" />
         )}

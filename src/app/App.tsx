@@ -1,26 +1,23 @@
 // ── MeetFlow V2 — Application Root ─────────────────────────────────────────
 //
-// Phase 2: AppProviders added (ThemeProvider + QueryClient + SessionInit).
-// Phase 3: RouterProvider added inside AppProviders.
-// Phase 9+: Router renders feature module pages.
+// Phase 3: RouterProvider integrated. Full navigation now active.
+//
+// Provider hierarchy (outermost → innermost):
+//   AppProviders (ThemeProvider → QueryClient → SessionInitializer)
+//     RouterProvider (React Router v7 — full route tree)
+//
+// Session is always hydrated before the router renders.
+// All route guards read directly from the session store without
+// checking isHydrated — SessionInitializer guarantees it.
 
+import { RouterProvider } from "react-router-dom";
 import { AppProviders } from "./providers";
+import { router } from "@/routes/router";
 
 export function App() {
   return (
     <AppProviders>
-      {/*
-        Phase 3 adds <RouterProvider router={router} /> here.
-        Until then, a placeholder confirms providers are working.
-      */}
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center space-y-2">
-          <h1 className="font-heading text-xl font-semibold text-foreground">MeetFlow V2</h1>
-          <p className="font-body text-sm text-muted-foreground">
-            Phase 2 — Infrastructure Layer complete. Router arrives in Phase 3.
-          </p>
-        </div>
-      </div>
+      <RouterProvider router={router} />
     </AppProviders>
   );
 }
