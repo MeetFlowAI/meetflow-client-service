@@ -1,0 +1,40 @@
+// ── Variant presets ───────────────────────────────────────────────────────────
+export {
+  easing,
+  fadeVariants,
+  slideUpVariants,
+  slideDownVariants,
+  slideRightVariants,
+  slideLeftVariants,
+  slideBottomVariants,
+  scaleVariants,
+  scaleBounceVariants,
+  pageVariants,
+  listContainerVariants,
+  listItemVariants,
+  accordionVariants,
+  backdropVariants,
+  notificationVariants,
+} from "./variants";
+
+// ── Transition presets ────────────────────────────────────────────────────────
+export {
+  normal,
+  moderate,
+  slow,
+  quick,
+  instant,
+  smooth,
+  snappy,
+  gentle,
+  bouncy,
+  stiff,
+  stagger,
+  staggerFast,
+  staggerSlow,
+  modalTransition,
+  sheetTransition,
+  pageTransition,
+  popoverTransition,
+  toastTransition,
+} from "./transitions";
