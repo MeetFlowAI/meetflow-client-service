@@ -16,6 +16,7 @@ export default defineConfig([
     "*.config.js", // Don't lint config files with type-aware rules
     "*.config.ts",
     "src/components/ui/**", // Shadcn primitives — not our code to lint
+    "public/mockServiceWorker.js",
   ]),
 
   // ── Main TypeScript + React ruleset ─────────────────────────────────────

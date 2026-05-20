@@ -24,6 +24,7 @@ node_modules
 *.sln
 *.sw?
 .DS_Store
+docs
 
 # ── Testing ──────────────────────────────────────────────────────────────────
 coverage
