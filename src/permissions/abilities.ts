@@ -1,26 +1,40 @@
-/* ============================================================
-   MeetFlow V2 — Permission Ability Matrix
-
-   READ THIS BEFORE MODIFYING:
-     This file is the SINGLE SOURCE OF TRUTH for all access
-     control rules in the frontend. Changes here affect every
-     PermissionGuard and usePermission() call in the entire app.
-
-   STRUCTURE:
-     ABILITIES[role][resource] = Action[]
-     
-   RESOURCES:
-     organizations  — org CRUD (super_admin only for create/delete)
-     members        — org member management
-     workspaces     — workspace CRUD
-     meetings       — meeting CRUD and management
-     channels       — channel CRUD and messaging
-     analytics      — read-only analytics views
-     billing        — plan + payment management
-     settings       — org / workspace settings
-     plans          — platform plan management (super_admin only)
-     users          — platform user management (super_admin only)
-   ============================================================ */
+/**
+ * @temporary — Static RBAC ability matrix
+ *
+ * CURRENT STATE:
+ *   This static matrix is a development-phase placeholder.
+ *   It gives the UI a working permission system from day one
+ *   without requiring a backend permissions API.
+ *
+ * THE PROBLEM WITH THIS APPROACH AT SCALE:
+ *   Real org-level permissions are contextual and overridable.
+ *   An org_admin may have restricted billing access in one org
+ *   and full access in another. A member may have been granted
+ *   a one-off permission override. A static matrix cannot
+ *   represent any of this.
+ *
+ * PLANNED REPLACEMENT (Phase 9+):
+ *   The /auth/me response will include:
+ *     { capabilities: ["billing:manage", "members:delete", ...] }
+ *
+ *   When that lands, replace this matrix with a capabilities check:
+ *     can(role, resource, action) →
+ *       session.capabilities.includes(`${resource}:${action}`)
+ *
+ *   The usePermission() hook API does NOT change — only this
+ *   file's `can()` function implementation changes. Every
+ *   PermissionGuard and usePermission() call site is untouched.
+ *
+ * WHAT NEVER CHANGES:
+ *   - usePermission() hook interface
+ *   - PermissionGuard / RoleGuard component APIs
+ *   - Resource and Action type definitions
+ *
+ * SECURITY REMINDER:
+ *   Frontend permissions are UI hints only.
+ *   Every sensitive API operation is authorized server-side.
+ *   This matrix controls what the user SEES, not what they CAN DO.
+ */
 
 import type { Role } from "./roles";
 
@@ -41,7 +55,7 @@ export type Action = "view" | "create" | "edit" | "delete" | "manage";
 type AbilityMatrix = Partial<Record<Resource, Action[]>>;
 
 export const ABILITIES: Record<Role, AbilityMatrix> = {
-  // ── Super Admin — full platform access ───────────────────────────────────
+  // ── Super Admin ───────────────────────────────────────────────────────────
   super_admin: {
     organizations: ["view", "create", "edit", "delete", "manage"],
     members: ["view", "create", "edit", "delete", "manage"],
@@ -55,7 +69,7 @@ export const ABILITIES: Record<Role, AbilityMatrix> = {
     users: ["view", "create", "edit", "delete", "manage"],
   },
 
-  // ── Org Admin — full org access, no platform management ──────────────────
+  // ── Org Admin ─────────────────────────────────────────────────────────────
   org_admin: {
     organizations: ["view", "edit"],
     members: ["view", "create", "edit", "delete"],
@@ -69,7 +83,7 @@ export const ABILITIES: Record<Role, AbilityMatrix> = {
     users: ["view"],
   },
 
-  // ── Member — standard product usage ──────────────────────────────────────
+  // ── Member ────────────────────────────────────────────────────────────────
   member: {
     workspaces: ["view"],
     meetings: ["view", "create"],
@@ -79,7 +93,7 @@ export const ABILITIES: Record<Role, AbilityMatrix> = {
     members: ["view"],
   },
 
-  // ── Guest — read-only access ──────────────────────────────────────────────
+  // ── Guest ─────────────────────────────────────────────────────────────────
   guest: {
     meetings: ["view"],
     channels: ["view"],
@@ -87,10 +101,10 @@ export const ABILITIES: Record<Role, AbilityMatrix> = {
 };
 
 /**
- * Returns true if the given role can perform the action on the resource.
- * This is the pure function — use usePermission() in React components.
+ * Pure function for permission checks outside of React components.
+ * In React components, use usePermission() from permissions/usePermission.ts.
  *
- * @example can("org_admin", "members", "delete") → true
+ * @temporary — See module JSDoc for planned replacement strategy.
  */
 export function can(role: Role, resource: Resource, action: Action): boolean {
   return ABILITIES[role]?.[resource]?.includes(action) ?? false;

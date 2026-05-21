@@ -1,19 +1,18 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { THEME_STORAGE_KEY } from "@/config/constants";
+import { UI_STORAGE_KEY } from "@/config/constants";
 
-// ── State shape ───────────────────────────────────────────────────────────────
+// ── State ─────────────────────────────────────────────────────────────────────
 
 interface UIState {
   /** Whether the main navigation sidebar is collapsed to icon-only width */
   sidebarCollapsed: boolean;
-
-  /** Whether the global command menu (Cmd+K) is open */
+  /** Whether the global command menu (Cmd+K / Ctrl+K) is open */
   commandMenuOpen: boolean;
-
   /**
-   * Full-screen loading overlay. Used during auth redirects and
-   * critical async operations. Not for data loading (use skeleton instead).
+   * Full-screen loading overlay. Reserved for auth redirects and
+   * critical blocking async operations.
+   * For data loading: use skeleton states inside components instead.
    */
   globalLoading: boolean;
 }
@@ -28,26 +27,33 @@ interface UIActions {
 }
 
 // ── Store ─────────────────────────────────────────────────────────────────────
-// Sidebar state is persisted — user preference survives page reload.
-// Command menu and global loading are ephemeral — reset on every mount.
+//
+// PERSISTENCE STRATEGY:
+//   Only `sidebarCollapsed` is persisted — it is a user UI preference
+//   that should survive page reloads and browser restarts.
+//
+//   `commandMenuOpen` and `globalLoading` are ephemeral — they must
+//   reset to false on every app boot. Never persist them.
+//
+// STORAGE KEY:
+//   Uses UI_STORAGE_KEY ("meetflow-ui") — distinct from THEME_STORAGE_KEY.
+//   Changing the theme constant no longer silently renames this key.
 
 export const useUIStore = create<UIState & UIActions>()(
   persist(
     (set) => ({
-      // State
       sidebarCollapsed: false,
       commandMenuOpen: false,
       globalLoading: false,
 
-      // Actions
       setSidebarCollapsed: (collapsed) => set({ sidebarCollapsed: collapsed }),
       toggleSidebar: () => set((s) => ({ sidebarCollapsed: !s.sidebarCollapsed })),
       setCommandMenuOpen: (open) => set({ commandMenuOpen: open }),
       setGlobalLoading: (loading) => set({ globalLoading: loading }),
     }),
     {
-      name: `${THEME_STORAGE_KEY}-ui`,
-      // Only persist sidebar preference — not transient UI state
+      name: UI_STORAGE_KEY,
+      // Persist only the user preference — not ephemeral state
       partialize: (state) => ({ sidebarCollapsed: state.sidebarCollapsed }),
     }
   )
