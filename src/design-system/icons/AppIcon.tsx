@@ -1,15 +1,30 @@
-import { cn } from "@/shared/utils/cn";
+// Layer 0 (design-system) imports from lib/ — correct dependency direction.
+// lib/ has no internal project imports; it is the lowest layer above npm.
+import { cn } from "@/lib/utils";
 
 /* ============================================================
    MeetFlow V2 — AppIcon
 
-   The single interface for ALL icons used in the product.
+   The single rendering interface for all icons in the product.
    Feature code never imports Lucide or custom SVGs directly —
    it uses App Components that accept an icon prop and render
    AppIcon internally.
 
-   SIZE SCALE (maps to CSS sizing utilities):
-     xs  → 12px  dense table cells, badges, inline indicators
+   PREFERRED USAGE PATTERN:
+     1. Semantic icons (common, frequent): import from @/design-system/icons
+          import { Icons } from "@/design-system/icons";
+          <AppButton leftIcon={Icons.add}>Create</AppButton>
+
+     2. Product-specific icons: import from @/design-system/icons
+          import { MeetingRoomIcon } from "@/design-system/icons";
+          <AppIcon icon={MeetingRoomIcon} size="xl" />
+
+     3. Contextual one-offs (rare): direct Lucide import is acceptable
+          import { Zap } from "lucide-react";
+          <AppButton leftIcon={Zap}>Upgrade</AppButton>
+
+   SIZE SCALE:
+     xs  → 12px  dense table cells, inline status dots
      sm  → 14px  compact button icons, secondary actions
      md  → 16px  default — most UI contexts
      lg  → 18px  section headers, prominent actions
@@ -19,61 +34,38 @@ import { cn } from "@/shared/utils/cn";
      4xl → 40px  illustration fills (rare)
 
    ACCESSIBILITY:
-     - Provide `label` for standalone decorative-to-informational icons
-     - Omit `label` for icons paired with visible text (aria-hidden applied)
-     - Never rely on icon alone to convey critical information
+     - Provide `label` for icons with no adjacent text
+     - Omit `label` when adjacent text conveys the meaning
    ============================================================ */
 
 const sizeMap = {
-  xs: "size-3", // 12px
-  sm: "size-3.5", // 14px
-  md: "size-4", // 16px
-  lg: "size-[18px]", // 18px
-  xl: "size-5", // 20px
-  "2xl": "size-6", // 24px
-  "3xl": "size-8", // 32px
-  "4xl": "size-10", // 40px
+  xs: "size-3",
+  sm: "size-3.5",
+  md: "size-4",
+  lg: "size-[18px]",
+  xl: "size-5",
+  "2xl": "size-6",
+  "3xl": "size-8",
+  "4xl": "size-10",
 } as const;
 
 export type IconSize = keyof typeof sizeMap;
 
 export interface AppIconProps {
-  /**
-   * The icon component to render.
-   * Accepts any Lucide icon, custom product icon, or brand logo.
-   * @example icon={Building2} icon={MeetingRoomIcon} icon={GoogleLogo}
-   */
+  /** Icon component: Lucide icon, custom product icon, or brand logo */
   icon: React.ElementType;
-
-  /**
-   * Visual size of the icon. Defaults to "md" (16px).
-   */
+  /** Visual size. Defaults to "md" (16px) */
   size?: IconSize;
-
-  /**
-   * Accessible label for standalone icons.
-   * When provided: sets aria-label and removes aria-hidden.
-   * When omitted: sets aria-hidden="true" (icon is decorative).
-   */
+  /** Accessible label. When provided, renders as img role. When omitted, aria-hidden. */
   label?: string;
-
-  /**
-   * Additional Tailwind classes. Useful for color overrides
-   * when the icon must be a specific semantic color.
-   * @example className="text-primary" className="text-muted-foreground"
-   */
+  /** Additional Tailwind classes for color or margin overrides */
   className?: string;
 }
 
 export function AppIcon({ icon: Icon, size = "md", label, className }: AppIconProps) {
   return (
     <Icon
-      className={cn(
-        sizeMap[size],
-        "shrink-0", // prevent flex shrinking in tight layouts
-        "inline-block", // baseline-align in text contexts
-        className
-      )}
+      className={cn(sizeMap[size], "shrink-0 inline-block", className)}
       aria-label={label}
       aria-hidden={!label}
       role={label ? "img" : undefined}

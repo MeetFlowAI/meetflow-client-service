@@ -5,18 +5,15 @@ import { AuthGuard } from "./guards/AuthGuard";
 import { GuestGuard } from "./guards/GuestGuard";
 import { RoleGuard } from "./guards/RoleGuard";
 import { ErrorPage } from "@/app/pages/ErrorPage";
+import { routePatterns } from "./paths";
 
 // ── Route loading fallback ────────────────────────────────────────────────────
-// Shown while a lazy route chunk is being downloaded.
-// Phase 7 replaces this with the real PageShell + skeleton system.
 // eslint-disable-next-line react-refresh/only-export-components
 function RouteFallback() {
   return <div className="min-h-screen bg-background animate-pulse" />;
 }
 
 // ── Root layout ───────────────────────────────────────────────────────────────
-// Wraps every route with a Suspense boundary.
-// The Suspense fallback is shown while any lazy child chunk loads.
 // eslint-disable-next-line react-refresh/only-export-components
 function RootLayout() {
   return (
@@ -26,17 +23,10 @@ function RootLayout() {
   );
 }
 
-// ── Lazy import factory ───────────────────────────────────────────────────────
-// Centralised so TypeScript can infer the return type and the import
-// pattern is consistent. Each call creates the React Router lazy config.
-//
-// REPLACEMENT PATTERN (Phase 9+):
-//   Before: comingSoon()
-//   After:  lazyRoute("@/modules/auth/components/SignInPage", "SignInPage")
-//
-// The comingSoon() function below is identical in shape — routes
-// are swapped one at a time as feature modules are built.
-
+// ── Lazy placeholder factory ──────────────────────────────────────────────────
+// Used for all routes not yet implemented (Phases 9–13).
+// Replace: comingSoon() → lazyRoute(import("@/modules/.../Page"), "Page")
+// Zero change to the route structure; only the factory call changes.
 function comingSoon() {
   return {
     lazy: async () => {
@@ -46,16 +36,18 @@ function comingSoon() {
   };
 }
 
-// ── Router definition ─────────────────────────────────────────────────────────
+// ── Router ────────────────────────────────────────────────────────────────────
+// All path strings are sourced from routePatterns — never inline strings.
+// TypeScript catches path typos at compile time.
+
 export const router = createBrowserRouter([
   {
-    // Root — wraps everything in a Suspense boundary
-    path: "/",
+    path: routePatterns.root,
     element: <RootLayout />,
     errorElement: <ErrorPage />,
 
     children: [
-      // ── Index: redirect based on auth + role ─────────────────────────────
+      // ── Index redirect (role-aware root navigation) ───────────────────────
       {
         index: true,
         lazy: async () => {
@@ -65,105 +57,67 @@ export const router = createBrowserRouter([
       },
 
       // ── Guest-only routes ─────────────────────────────────────────────────
-      // Authenticated users are redirected to their dashboard.
       {
         element: <GuestGuard />,
         children: [
           {
-            path: "auth",
+            path: routePatterns.auth.root,
             children: [
-              {
-                path: "sign-in",
-                ...comingSoon(), // → Phase 9: SignInPage
-              },
-              {
-                path: "sign-up",
-                ...comingSoon(), // → Phase 9: SignUpPage
-              },
-              {
-                path: "forgot-password",
-                ...comingSoon(), // → Phase 9: ForgotPasswordPage
-              },
-              {
-                path: "reset-password",
-                ...comingSoon(), // → Phase 9: ResetPasswordPage
-              },
+              { path: routePatterns.auth.signIn, ...comingSoon() }, // Phase 9
+              { path: routePatterns.auth.signUp, ...comingSoon() }, // Phase 9
+              { path: routePatterns.auth.forgotPassword, ...comingSoon() }, // Phase 9
+              { path: routePatterns.auth.resetPassword, ...comingSoon() }, // Phase 9
             ],
           },
         ],
       },
 
       // ── Authenticated routes ──────────────────────────────────────────────
-      // Unauthenticated users are redirected to sign-in.
       {
         element: <AuthGuard />,
         children: [
-          // ── Onboarding (authenticated but no org yet) ───────────────────
+          // Onboarding — authenticated but org context not yet established
           {
-            path: "auth/onboarding",
-            ...comingSoon(), // → Phase 9: OnboardingPage
+            path: `${routePatterns.auth.root}/${routePatterns.auth.onboarding}`,
+            ...comingSoon(), // Phase 9
           },
 
-          // ── Master Dashboard (super_admin only) ─────────────────────────
+          // ── Master Dashboard — super_admin only ─────────────────────────
           {
             element: <RoleGuard roles={["super_admin"]} />,
             children: [
               {
-                path: "master",
+                path: routePatterns.master.root,
                 children: [
+                  { index: true, ...comingSoon() }, // Phase 10
+
+                  // Organizations
                   {
-                    index: true,
-                    ...comingSoon(), // → Phase 10: MasterOverviewPage
-                  },
-                  {
-                    path: "organizations",
+                    path: routePatterns.master.organizations,
                     children: [
-                      {
-                        index: true,
-                        ...comingSoon(), // → Phase 10: ManageOrganizations
-                      },
-                      {
-                        path: "create",
-                        ...comingSoon(), // → Phase 10: CreateOrganization
-                      },
-                      {
-                        path: ":orgId",
-                        ...comingSoon(), // → Phase 10: OrganizationDetail
-                      },
-                      {
-                        path: ":orgId/edit",
-                        ...comingSoon(), // → Phase 10: EditOrganization
-                      },
+                      { index: true, ...comingSoon() }, // Phase 10
+                      { path: "create", ...comingSoon() }, // Phase 10
+                      { path: ":orgId", ...comingSoon() }, // Phase 10
+                      { path: ":orgId/edit", ...comingSoon() }, // Phase 10
                     ],
                   },
+
+                  // Plans
                   {
-                    path: "plans",
+                    path: routePatterns.master.plans,
                     children: [
-                      {
-                        index: true,
-                        ...comingSoon(), // → Phase 10: ManagePlans
-                      },
-                      {
-                        path: "create",
-                        ...comingSoon(),
-                      },
-                      {
-                        path: ":planId/edit",
-                        ...comingSoon(),
-                      },
+                      { index: true, ...comingSoon() }, // Phase 10
+                      { path: "create", ...comingSoon() }, // Phase 10
+                      { path: ":planId/edit", ...comingSoon() }, // Phase 10
                     ],
                   },
+
+                  // Users
                   {
-                    path: "users",
+                    path: routePatterns.master.users,
                     children: [
-                      {
-                        index: true,
-                        ...comingSoon(), // → Phase 10: ManageUsers
-                      },
-                      {
-                        path: ":userId",
-                        ...comingSoon(),
-                      },
+                      { index: true, ...comingSoon() }, // Phase 10
+                      { path: ":userId", ...comingSoon() }, // Phase 10
                     ],
                   },
                 ],
@@ -171,53 +125,31 @@ export const router = createBrowserRouter([
             ],
           },
 
-          // ── Org Dashboard (org_admin + member) ──────────────────────────
+          // ── Org Dashboard — member and above ────────────────────────────
           {
             element: <RoleGuard minRole="member" />,
             children: [
               {
-                path: "org/:orgId",
+                path: routePatterns.org.root,
                 children: [
+                  { index: true, ...comingSoon() }, // Phase 11 redirect
+                  { path: routePatterns.org.overview, ...comingSoon() }, // Phase 11
+                  { path: routePatterns.org.analytics, ...comingSoon() }, // Phase 11
+                  { path: routePatterns.org.reports, ...comingSoon() }, // Phase 11
+                  { path: routePatterns.org.members, ...comingSoon() }, // Phase 11
+
+                  // Billing — org_admin and above only
                   {
-                    index: true,
-                    ...comingSoon(), // → Phase 11: Redirect to overview
-                  },
-                  {
-                    path: "overview",
-                    ...comingSoon(), // → Phase 11: OrgOverviewPage
-                  },
-                  {
-                    path: "analytics",
-                    ...comingSoon(), // → Phase 11: OrgAnalyticsPage
-                  },
-                  {
-                    path: "reports",
-                    ...comingSoon(), // → Phase 11: OrgReportsPage
-                  },
-                  {
-                    path: "billing",
-                    // Billing management requires org_admin or above
+                    path: routePatterns.org.billing,
                     element: <RoleGuard minRole="org_admin" />,
-                    children: [
-                      {
-                        index: true,
-                        ...comingSoon(), // → Phase 11: BillingPage
-                      },
-                    ],
+                    children: [{ index: true, ...comingSoon() }], // Phase 11
                   },
+
+                  // Settings — org_admin and above only
                   {
-                    path: "members",
-                    ...comingSoon(), // → Phase 11: OrgMembersPage
-                  },
-                  {
-                    path: "settings",
+                    path: routePatterns.org.settings,
                     element: <RoleGuard minRole="org_admin" />,
-                    children: [
-                      {
-                        index: true,
-                        ...comingSoon(), // → Phase 11: OrgSettingsPage
-                      },
-                    ],
+                    children: [{ index: true, ...comingSoon() }], // Phase 11
                   },
                 ],
               },
@@ -226,67 +158,42 @@ export const router = createBrowserRouter([
 
           // ── Workspace ────────────────────────────────────────────────────
           {
-            path: "workspace/:workspaceId",
+            path: routePatterns.workspace.root,
             children: [
+              { index: true, ...comingSoon() }, // Phase 12 redirect
+              { path: routePatterns.workspace.meetings, ...comingSoon() }, // Phase 12
+              { path: routePatterns.workspace.members, ...comingSoon() }, // Phase 12
+
+              // Channels
               {
-                index: true,
-                ...comingSoon(), // → Phase 12: Redirect to channels
-              },
-              {
-                path: "channels",
+                path: routePatterns.workspace.channels,
                 children: [
-                  {
-                    index: true,
-                    ...comingSoon(), // → Phase 12: ChannelListPage
-                  },
-                  {
-                    path: ":channelId",
-                    ...comingSoon(), // → Phase 13: ChannelPage (real-time)
-                  },
+                  { index: true, ...comingSoon() }, // Phase 12
+                  { path: ":channelId", ...comingSoon() }, // Phase 13 (real-time)
                 ],
               },
+
+              // Settings — org_admin and above only
               {
-                path: "meetings",
-                ...comingSoon(), // → Phase 12: MeetingsPage
-              },
-              {
-                path: "members",
-                ...comingSoon(), // → Phase 12: WorkspaceMembersPage
-              },
-              {
-                path: "settings",
+                path: routePatterns.workspace.settings,
                 element: <RoleGuard minRole="org_admin" />,
-                children: [
-                  {
-                    index: true,
-                    ...comingSoon(), // → Phase 12: WorkspaceSettingsPage
-                  },
-                ],
+                children: [{ index: true, ...comingSoon() }], // Phase 12
               },
             ],
           },
 
-          // ── Meeting room (full-screen — no sidebar layout) ───────────────
-          {
-            path: "meeting/:meetingId",
-            ...comingSoon(), // → Phase 13: MeetingRoomPage (LiveKit)
-          },
+          // ── Meeting room — full-screen, no sidebar layout ────────────────
+          { path: routePatterns.meeting, ...comingSoon() }, // Phase 13
 
           // ── Account pages ────────────────────────────────────────────────
-          {
-            path: "profile",
-            ...comingSoon(), // → Phase 12: ProfilePage
-          },
-          {
-            path: "notifications",
-            ...comingSoon(), // → Phase 12: NotificationsPage
-          },
+          { path: routePatterns.profile, ...comingSoon() }, // Phase 12
+          { path: routePatterns.notifications, ...comingSoon() }, // Phase 12
         ],
       },
 
-      // ── Error / utility pages (no auth required) ──────────────────────────
+      // ── Error / utility pages — no auth required ──────────────────────────
       {
-        path: "403",
+        path: routePatterns.forbidden,
         lazy: async () => {
           const { ForbiddenPage } = await import("@/app/pages/ForbiddenPage");
           return { Component: ForbiddenPage };
@@ -300,8 +207,7 @@ export const router = createBrowserRouter([
         },
       },
       {
-        // Catch-all: any unmatched URL renders the 404 page
-        path: "*",
+        path: routePatterns.notFound,
         lazy: async () => {
           const { NotFoundPage } = await import("@/app/pages/NotFoundPage");
           return { Component: NotFoundPage };

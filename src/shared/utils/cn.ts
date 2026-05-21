@@ -1,20 +1,13 @@
-import { type ClassValue, clsx } from "clsx";
-import { twMerge } from "tailwind-merge";
+/* ============================================================
+   MeetFlow V2 — cn Re-export
 
-/**
- * Merges Tailwind CSS class names safely, resolving conflicts.
- *
- * This is the ONLY class-merging utility in the entire codebase.
- * Never use `clsx` or `twMerge` directly — always use `cn`.
- *
- * What it does:
- * - `clsx` handles conditional classes, arrays, and objects
- * - `twMerge` resolves Tailwind conflicts (e.g. `px-4 px-6` → `px-6`)
- *
- * @example
- * cn("px-4 py-2 rounded", isActive && "bg-primary text-white", className)
- * cn(["text-sm", "font-medium"], { "opacity-50": disabled })
- */
-export function cn(...inputs: ClassValue[]): string {
-  return twMerge(clsx(inputs));
-}
+   This file exists so that shared/ code has a local import
+   path and so that the layer contract is visible in code:
+
+     shared/utils/ → re-exports from lib/utils (correct direction)
+
+   The CANONICAL implementation lives at src/lib/utils.ts.
+   Do not duplicate or override the implementation here.
+   ============================================================ */
+
+export { cn } from "@/lib/utils";
