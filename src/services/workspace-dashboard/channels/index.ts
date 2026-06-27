@@ -122,7 +122,7 @@ export const addChannelMemberRequest = (
 ): Promise<ApiResponse> =>
   axiosConfig
     .post(API_ENDPOINTS.WORKSPACE.CHANNEL_MEMBERS.ADD(workspaceId, channelId), {
-      user_id: userId,
+      user_id: Number(userId),
     })
     .then((r) => r.data);
 

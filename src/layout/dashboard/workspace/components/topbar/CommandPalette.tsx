@@ -84,14 +84,14 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({
     }[];
   }>(["channels", selectedWorkspaceId]);
 
-  const membersCache = qc.getQueryData<any[]>([
+  const membersCache = qc.getQueryData<any>([
     "workspace-members",
     selectedWorkspaceId,
   ]);
 
   const publicChannels = channelsCache?.publicChannels ?? [];
   const privateChannels = channelsCache?.privateChannels ?? [];
-  const members = (membersCache ?? []).filter(
+  const members = (membersCache?.data  ?? [])?.filter(
     (m: any) => m.member?.id !== user?.id,
   );
 

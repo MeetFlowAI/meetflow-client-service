@@ -9,9 +9,19 @@
  *  - Delete task
  *  - Priority badge + assignee display
  *  - AI-sourced tasks show a ✨ badge
+ *
+ * Data layer: TanStack Query — gives us refetchOnWindowFocus for free so
+ * AI-extracted tasks appear as soon as the user returns to this tab.
  */
 
-import React, { useState, useCallback, useEffect, type JSX } from "react";
+import React, {
+  useState,
+  useCallback,
+  useEffect,
+  useMemo,
+  type JSX,
+} from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   CheckSquare,
   Plus,
@@ -48,6 +58,14 @@ interface ChannelTasksProps {
   channelId: number;
   onTaskCountChange?: (count: number) => void;
 }
+
+// ── Query key factory ──────────────────────────────────────────────────────────
+
+const taskQueryKey = (workspaceId: number, channelId: number) => [
+  "channel-tasks",
+  workspaceId,
+  channelId,
+];
 
 // ── Priority config ────────────────────────────────────────────────────────────
 
@@ -119,7 +137,7 @@ const nextStatus = (s: TaskStatus): TaskStatus => {
 // ── Quick-add form ─────────────────────────────────────────────────────────────
 
 interface QuickAddFormProps {
-  onAdd: (title: string, priority: TaskPriority) => Promise<void>;
+  onAdd: (title: string, priority: TaskPriority) => void;
   onCancel: () => void;
   loading: boolean;
 }
@@ -132,10 +150,10 @@ const QuickAddForm: React.FC<QuickAddFormProps> = ({
   const [title, setTitle] = useState("");
   const [priority, setPriority] = useState<TaskPriority>("medium");
 
-  const handleSubmit = async () => {
+  const handleSubmit = () => {
     const trimmed = title.trim();
     if (!trimmed) return;
-    await onAdd(trimmed, priority);
+    onAdd(trimmed, priority);
     setTitle("");
   };
 
@@ -336,98 +354,156 @@ const ChannelTasks: React.FC<ChannelTasksProps> = ({
   channelId,
   onTaskCountChange,
 }): JSX.Element => {
-  const [tasks, setTasks] = useState<ITask[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [showAdd, setShowAdd] = useState(false);
-  const [addLoading, setAddLoading] = useState(false);
   const [deletingId, setDeletingId] = useState<number | null>(null);
-  const [collapsed, setCollapsed] = useState<Set<TaskStatus>>(
-    new Set(["done"]),
+  const [collapsed, setCollapsed] = useState<Set<TaskStatus>>(new Set(["done"]));
+  const [selectedStatus, setSelectedStatus] = useState<"all" | TaskStatus>("all");
+  const [selectedPriority, setSelectedPriority] = useState<"all" | TaskPriority>("all");
+  const [searchQuery, setSearchQuery] = useState("");
+  const qKey = [
+    ...taskQueryKey(workspaceId, channelId),
+    selectedStatus,
+    selectedPriority,
+    searchQuery.trim(),
+  ];
+
+  const activeFiltersCount = useMemo(
+    () =>
+      Number(selectedStatus !== "all") +
+      Number(selectedPriority !== "all") +
+      Number(searchQuery.trim().length > 0),
+    [selectedStatus, selectedPriority, searchQuery],
   );
 
-  // ── Fetch tasks ──────────────────────────────────────────────────────
-  const fetchTasks = useCallback(async () => {
-    setLoading(true);
-    try {
-      const result = await getChannelTasksRequest(workspaceId, channelId, {
+  // ── Fetch tasks (TanStack Query) ──────────────────────────────────────
+  // refetchOnWindowFocus: true means when the user alt-tabs back or switches
+  // browser tabs, the list refreshes — this is how AI tasks appear without
+  // the user manually refreshing after a pipeline completes.
+  const { data, isLoading } = useQuery({
+    queryKey: qKey,
+    queryFn: () =>
+      getChannelTasksRequest(workspaceId, channelId, {
         limit: 100,
-      });
-      const list = result?.rows ?? [];
-      setTasks(list);
-      onTaskCountChange?.(list.filter((t) => t.status !== "done").length);
-    } catch (err: any) {
-      Toast.error({
-        message: "Failed to load tasks",
-        description: err?.message,
-      });
-    } finally {
-      setLoading(false);
-    }
-  }, [workspaceId, channelId, onTaskCountChange]);
+        status: selectedStatus !== "all" ? selectedStatus : undefined,
+        priority: selectedPriority !== "all" ? selectedPriority : undefined,
+        search: searchQuery.trim() || undefined,
+      }),
+    enabled: !!workspaceId && !!channelId,
+    refetchOnWindowFocus: true,
+    staleTime: 30_000,
+  });
 
+  const tasks: ITask[] = data?.rows ?? [];
+
+  // Keep parent task count in sync
   useEffect(() => {
-    fetchTasks();
-  }, [fetchTasks]);
+    onTaskCountChange?.(tasks.filter((t) => t.status !== "done").length);
+  }, [tasks, onTaskCountChange]);
 
-  // ── Create ───────────────────────────────────────────────────────────
-  const handleAdd = async (title: string, priority: TaskPriority) => {
-    setAddLoading(true);
-    try {
-      const task = await createTaskRequest(workspaceId, channelId, {
-        title,
-        priority,
-      });
-      setTasks((prev) => [task, ...prev]);
-      onTaskCountChange?.(tasks.filter((t) => t.status !== "done").length + 1);
+  // ── Create task ───────────────────────────────────────────────────────
+  const createMutation = useMutation({
+    mutationFn: ({
+      title,
+      priority,
+    }: {
+      title: string;
+      priority: TaskPriority;
+    }) => createTaskRequest(workspaceId, channelId, { title, priority }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: taskQueryKey(workspaceId, channelId) });
       setShowAdd(false);
-    } catch (err: any) {
+    },
+    onError: (err: any) => {
       Toast.error({
         message: "Failed to create task",
         description: err?.message,
       });
-    } finally {
-      setAddLoading(false);
-    }
-  };
+    },
+  });
 
-  // ── Status toggle ─────────────────────────────────────────────────────
-  const handleStatusToggle = async (task: ITask) => {
-    const newStatus = nextStatus(task.status);
-    // Optimistic update
-    setTasks((prev) =>
-      prev.map((t) => (t.id === task.id ? { ...t, status: newStatus } : t)),
-    );
-    try {
-      await updateTaskRequest(workspaceId, channelId, task.id, {
+  // ── Status toggle (optimistic) ────────────────────────────────────────
+  const statusMutation = useMutation({
+    mutationFn: ({
+      task,
+      newStatus,
+    }: {
+      task: ITask;
+      newStatus: TaskStatus;
+    }) =>
+      updateTaskRequest(workspaceId, channelId, task.id, {
         status: newStatus,
-      });
-    } catch (err: any) {
-      // Rollback
-      setTasks((prev) =>
-        prev.map((t) => (t.id === task.id ? { ...t, status: task.status } : t)),
+      }),
+    onMutate: async ({ task, newStatus }) => {
+      await queryClient.cancelQueries({ queryKey: qKey });
+      const prev =
+        queryClient.getQueryData<{ count: number; rows: ITask[] }>(qKey);
+      queryClient.setQueryData<{ count: number; rows: ITask[] }>(qKey, (old) =>
+        old
+          ? {
+              ...old,
+              rows: old.rows.map((t) =>
+                t.id === task.id ? { ...t, status: newStatus } : t,
+              ),
+            }
+          : old,
       );
+      return { prev };
+    },
+    onError: (_err, _vars, ctx) => {
+      if (ctx?.prev) queryClient.setQueryData(qKey, ctx.prev);
       Toast.error({ message: "Failed to update task" });
-      console.log(err);
-    }
-  };
+    },
+  });
 
-  // ── Delete ────────────────────────────────────────────────────────────
-  const handleDelete = async (task: ITask) => {
-    setDeletingId(task.id);
-    try {
-      await deleteTaskRequest(workspaceId, channelId, task.id);
-      const updated = tasks.filter((t) => t.id !== task.id);
-      setTasks(updated);
-      onTaskCountChange?.(updated.filter((t) => t.status !== "done").length);
-    } catch (err: any) {
+  // ── Delete task (optimistic) ──────────────────────────────────────────
+  const deleteMutation = useMutation({
+    mutationFn: (taskId: number) =>
+      deleteTaskRequest(workspaceId, channelId, taskId),
+    onMutate: async (taskId) => {
+      setDeletingId(taskId);
+      await queryClient.cancelQueries({ queryKey: qKey });
+      const prev =
+        queryClient.getQueryData<{ count: number; rows: ITask[] }>(qKey);
+      queryClient.setQueryData<{ count: number; rows: ITask[] }>(qKey, (old) =>
+        old
+          ? {
+              count: Math.max(0, old.count - 1),
+              rows: old.rows.filter((t) => t.id !== taskId),
+            }
+          : old,
+      );
+      return { prev };
+    },
+    onError: (_err, _taskId, ctx) => {
+      if (ctx?.prev) queryClient.setQueryData(qKey, ctx.prev);
       Toast.error({ message: "Failed to delete task" });
-      console.log(err);
-    } finally {
-      setDeletingId(null);
-    }
-  };
+    },
+    onSettled: () => setDeletingId(null),
+  });
 
-  // ── Collapse toggle ───────────────────────────────────────────────────
+  // ── Handlers ──────────────────────────────────────────────────────────
+  const handleAdd = useCallback(
+    (title: string, priority: TaskPriority) => {
+      createMutation.mutate({ title, priority });
+    },
+    [createMutation],
+  );
+
+  const handleStatusToggle = useCallback(
+    (task: ITask) => {
+      statusMutation.mutate({ task, newStatus: nextStatus(task.status) });
+    },
+    [statusMutation],
+  );
+
+  const handleDelete = useCallback(
+    (task: ITask) => {
+      deleteMutation.mutate(task.id);
+    },
+    [deleteMutation],
+  );
+
   const toggleCollapse = (status: TaskStatus) => {
     setCollapsed((prev) => {
       const next = new Set(prev);
@@ -441,7 +517,7 @@ const ChannelTasks: React.FC<ChannelTasksProps> = ({
   const byStatus = (status: TaskStatus) =>
     tasks.filter((t) => t.status === status);
 
-  const isEmpty = tasks.length === 0 && !loading;
+  const isEmpty = tasks.length === 0 && !isLoading;
 
   // ── Render ────────────────────────────────────────────────────────────
   return (
@@ -449,34 +525,111 @@ const ChannelTasks: React.FC<ChannelTasksProps> = ({
       {/* Sub-header */}
       <div
         className={clsx(
-          "flex items-center justify-between px-5 py-3 shrink-0",
+          "flex flex-col gap-3 px-5 py-3 shrink-0",
           "border-b border-secondary-100 dark:border-secondary-800",
         )}
       >
-        <div className="flex items-center gap-2">
-          <CheckSquare className="h-4 w-4 text-secondary-400" />
-          <span
-            className={clsx(
-              typography.semibold14,
-              "text-secondary-700 dark:text-secondary-200",
-            )}
-          >
-            Tasks
-          </span>
-          {tasks.length > 0 && (
-            <span className="text-[11px] font-medium px-1.5 py-0.5 rounded-full bg-secondary-100 dark:bg-secondary-700 text-secondary-500 dark:text-secondary-400">
-              {tasks.filter((t) => t.status !== "done").length} open
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <CheckSquare className="h-4 w-4 text-secondary-400" />
+            <span
+              className={clsx(
+                typography.semibold14,
+                "text-secondary-700 dark:text-secondary-200",
+              )}
+            >
+              Tasks
             </span>
-          )}
+            {tasks.length > 0 && (
+              <span className="text-[11px] font-medium px-1.5 py-0.5 rounded-full bg-secondary-100 dark:bg-secondary-700 text-secondary-500 dark:text-secondary-400">
+                {tasks.filter((t) => t.status !== "done").length} open
+              </span>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            {activeFiltersCount > 0 && (
+              <span className="text-[11px] font-medium px-2 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+                {activeFiltersCount} filter{activeFiltersCount > 1 ? "s" : ""}
+              </span>
+            )}
+            <Button
+              size="sm"
+              onClick={() => setShowAdd((v) => !v)}
+              className="gap-1.5 h-8 text-xs"
+            >
+              <div className="flex items-center gap-1">
+                 <Plus className="h-3.5 w-3.5" />
+                  Add Task
+              </div>
+             
+            </Button>
+          </div>
         </div>
-        <Button
-          size="sm"
-          onClick={() => setShowAdd((v) => !v)}
-          className="gap-1.5 h-8 text-xs"
-        >
-          <Plus className="h-3.5 w-3.5" />
-          Add Task
-        </Button>
+
+        <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+          <div className="flex flex-1 items-center gap-2">
+            <input
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search tasks by title or description..."
+              className={clsx(
+                "flex-1 min-w-0 rounded-xl border bg-white dark:bg-secondary-900",
+                "border-secondary-200 dark:border-secondary-700 px-3 py-2",
+                typography.regular14,
+                "text-secondary-800 dark:text-secondary-100",
+                "placeholder:text-secondary-400 dark:placeholder:text-secondary-500",
+              )}
+            />
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <select
+              value={selectedStatus}
+              onChange={(e) => setSelectedStatus(e.target.value as "all" | TaskStatus)}
+              className={clsx(
+                "rounded-xl border bg-white dark:bg-secondary-900",
+                "border-secondary-200 dark:border-secondary-700 px-3 py-2",
+                typography.regular14,
+                "text-secondary-700 dark:text-secondary-100",
+              )}
+            >
+              <option value="all">All statuses</option>
+              <option value="todo">To Do</option>
+              <option value="in_progress">In Progress</option>
+              <option value="done">Done</option>
+            </select>
+            <select
+              value={selectedPriority}
+              onChange={(e) => setSelectedPriority(e.target.value as "all" | TaskPriority)}
+              className={clsx(
+                "rounded-xl border bg-white dark:bg-secondary-900",
+                "border-secondary-200 dark:border-secondary-700 px-3 py-2",
+                typography.regular14,
+                "text-secondary-700 dark:text-secondary-100",
+              )}
+            >
+              <option value="all">All priorities</option>
+              <option value="high">High</option>
+              <option value="medium">Medium</option>
+              <option value="low">Low</option>
+            </select>
+            {(selectedStatus !== "all" || selectedPriority !== "all" || searchQuery.trim()) && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedStatus("all");
+                  setSelectedPriority("all");
+                  setSearchQuery("");
+                }}
+                className={clsx(
+                  "rounded-xl border border-secondary-200 bg-secondary-50 dark:bg-secondary-900/50",
+                  "px-3 py-2 text-[12px] font-medium text-secondary-600 dark:text-secondary-300",
+                )}
+              >
+                Clear filters
+              </button>
+            )}
+          </div>
+        </div>
       </div>
 
       {/* Content */}
@@ -487,11 +640,11 @@ const ChannelTasks: React.FC<ChannelTasksProps> = ({
             <QuickAddForm
               onAdd={handleAdd}
               onCancel={() => setShowAdd(false)}
-              loading={addLoading}
+              loading={createMutation.isPending}
             />
           )}
 
-          {loading && (
+          {isLoading && (
             <div className="flex items-center justify-center py-12">
               <Loader2 className="h-6 w-6 animate-spin text-secondary-300" />
             </div>
@@ -525,12 +678,15 @@ const ChannelTasks: React.FC<ChannelTasksProps> = ({
                 className="mt-4 gap-1.5"
                 onClick={() => setShowAdd(true)}
               >
-                <Plus className="h-3.5 w-3.5" /> Add your first task
+                <div className="flex items-center gap-1">
+                  <Plus className="h-3.5 w-3.5" />
+                  Add your first task
+                </div>
               </Button>
             </div>
           )}
 
-          {!loading &&
+          {!isLoading &&
             STATUS_GROUPS.map(({ id, label, color }) => {
               const group = byStatus(id);
               if (group.length === 0) return null;

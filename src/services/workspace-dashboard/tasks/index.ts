@@ -69,6 +69,7 @@ export const getChannelTasksRequest = (
     limit?: number;
     status?: TaskStatus;
     priority?: TaskPriority;
+    search?: string;
   },
 ): Promise<{ count: number; rows: ITask[] }> =>
   axiosConfig

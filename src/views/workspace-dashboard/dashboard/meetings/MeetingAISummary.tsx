@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -5,11 +6,15 @@ import {
   CheckCircle2,
   AlertCircle,
   ClipboardList,
+  Copy,
+  Download,
 } from "lucide-react";
 import { useWorkspace } from "@/context/WorkspaceContext";
 import { getAIMeetingSummaryRequest } from "@/services/workspace-dashboard/meetings";
 import WorkspaceDashboardPage from "@/components/page/dashboard/workspace";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import Toast from "@/components/toast";
 
 export default function MeetingAISummary() {
   const { channelId, meetingId } = useParams<{
@@ -33,6 +38,71 @@ export default function MeetingAISummary() {
       return 10_000;
     },
   });
+
+  const summaryText = useMemo(() => {
+    if (!data) return "";
+
+    const lines = [
+      "Meeting Summary",
+      "",
+      "Overview:",
+      data.overview,
+      "",
+      "Decisions:",
+    ];
+
+    if (data.decisions.length > 0) {
+      lines.push(...data.decisions.map((item) => `- ${item}`));
+    } else {
+      lines.push("- None");
+    }
+
+    lines.push("", "Blockers:");
+    if (data.blockers.length > 0) {
+      lines.push(...data.blockers.map((item) => `- ${item}`));
+    } else {
+      lines.push("- None");
+    }
+
+    if (data.tasks.length > 0) {
+      lines.push("", `Action Items (${data.tasks.length}):`);
+      lines.push(
+        ...data.tasks.map(
+          (task) =>
+            `- ${task.title} (${task.priority})${task.assignee_name ? ` → ${task.assignee_name}` : ""}`,
+        ),
+      );
+    }
+
+    return lines.join("\n");
+  }, [data]);
+
+  const copySummaryToClipboard = async () => {
+    if (!data) return;
+    try {
+      await navigator.clipboard.writeText(summaryText);
+      Toast.success({ message: "Summary copied to clipboard." });
+    } catch (err) {
+      Toast.error({
+        message: "Unable to copy summary.",
+        description: String(err),
+      });
+    }
+  };
+
+  const downloadSummary = () => {
+    if (!data) return;
+
+    const blob = new Blob([summaryText], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `meeting-summary-${meetingId}.txt`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+  };
 
   if (isLoading)
     return (
@@ -58,10 +128,31 @@ export default function MeetingAISummary() {
   return (
     <WorkspaceDashboardPage title="Meeting Summary">
       <div className="max-w-4xl mx-auto flex flex-col gap-8 pb-12">
-        <div>
-          <h1 className="text-2xl font-semibold text-secondary-900 dark:text-secondary-50">
-            Meeting Summary
-          </h1>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h1 className="text-2xl font-semibold text-secondary-900 dark:text-secondary-50">
+              Meeting Summary
+            </h1>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              size="sm"
+              onClick={copySummaryToClipboard}
+              className="gap-2"
+            >
+              <Copy className="h-4 w-4" />
+              Copy Summary
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={downloadSummary}
+              className="gap-2"
+            >
+              <Download className="h-4 w-4" />
+              Download .txt
+            </Button>
+          </div>
         </div>
 
         {/* Overview */}

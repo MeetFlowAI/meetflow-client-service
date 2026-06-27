@@ -7,10 +7,15 @@
  * Shows: active meeting banner (join) + past meetings list + start button.
  * Meeting session (LiveKit room) is lifted to ViewChannel since the
  * overlay is fullscreen and lives outside this tab.
+ *
+ * Change: AIStageTracker now invalidates the channel-tasks query the moment
+ * ai_status transitions to "completed" so AI-extracted tasks appear in the
+ * Tasks tab immediately — no manual refresh required.
  */
 
-import React, { type JSX } from "react";
+import React, { useEffect, useRef, type JSX } from "react";
 import { useNavigate } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   Video,
   Play,
@@ -45,9 +50,12 @@ interface ChannelMeetingsProps {
   onJoinMeeting: (meetingId: number) => void;
 }
 
-// ── AI status badge ─────────────────────────────────────────────────────────
+// ── AI status badge / stage tracker ─────────────────────────────────────────
 
 const AIStageTracker = ({ meeting }: { meeting: IMeeting }) => {
+  const queryClient = useQueryClient();
+  const navigate = useNavigate();
+
   const liveState = useMeetingStatusStream(
     meeting.workspace_id,
     meeting.channel_id,
@@ -58,24 +66,33 @@ const AIStageTracker = ({ meeting }: { meeting: IMeeting }) => {
     },
   );
 
-  console.log("liveState", liveState);
-
   const ai_status = liveState?.ai_status;
-
-  // 🔥 normalize stage here
   const rawStage = liveState?.ai_stage ?? null;
   const ai_stage =
     rawStage === null && ai_status === "processing"
-      ? "transcription" // ← default to transcription when pipeline just started
+      ? "transcription"
       : rawStage;
 
-  console.log("ai_status", ai_status, "ai_stage", ai_stage);
-  const navigate = useNavigate();
+  // ── Invalidate tasks query when AI pipeline completes ──────────────────
+  // We track the previous status so we only fire once on the transition,
+  // not on every render while status stays "completed".
+  const prevStatusRef = useRef<string | undefined>(undefined);
+
+  useEffect(() => {
+    if (
+      ai_status === "completed" &&
+      prevStatusRef.current !== "completed"
+    ) {
+      queryClient.invalidateQueries({
+        queryKey: ["channel-tasks", meeting.workspace_id, meeting.channel_id],
+      });
+    }
+    prevStatusRef.current = ai_status;
+  }, [ai_status, meeting.workspace_id, meeting.channel_id, queryClient]);
 
   if (!ai_status || ai_status === "not_triggered") return null;
 
   if (ai_status === "failed") {
-    console.log("ai_status", ai_status, "ai_stage", ai_stage);
     return (
       <div className="flex items-center gap-1.5 mt-2">
         <span className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full bg-red-50 dark:bg-red-900/20 text-red-500">
@@ -86,7 +103,6 @@ const AIStageTracker = ({ meeting }: { meeting: IMeeting }) => {
   }
 
   if (ai_status === "completed") {
-    console.log("ai_status", ai_status, "ai_stage", ai_stage);
     return (
       <div className="flex items-center gap-1.5 mt-2">
         <button
@@ -104,7 +120,6 @@ const AIStageTracker = ({ meeting }: { meeting: IMeeting }) => {
   }
 
   if (ai_status === "pending_review") {
-    console.log("ai_status", ai_status, "ai_stage", ai_stage);
     return (
       <div className="flex items-center gap-1.5 mt-2">
         <button
@@ -123,20 +138,15 @@ const AIStageTracker = ({ meeting }: { meeting: IMeeting }) => {
 
   // "processing" — show stage-by-stage progress
   const currentStageIdx = STAGE_ORDER.indexOf(ai_stage as any);
-  console.log("currentStageIdx", currentStageIdx);
 
   return (
     <div className="mt-2 flex flex-col gap-1">
       {STAGE_ORDER.filter(
         (s) => s !== "completed" && s !== "pending_review",
       ).map((stage, idx) => {
-        console.log("stage", stage, "idx", idx);
         const isDone = currentStageIdx > idx;
-        console.log("isDone", isDone);
         const isCurrent = currentStageIdx === idx;
-        console.log("isCurrent", isCurrent);
         const label = STAGE_LABELS[stage];
-        console.log("label", label);
 
         return (
           <div
@@ -204,10 +214,10 @@ const ChannelMeetings: React.FC<ChannelMeetingsProps> = ({
           {meetingLoading ? (
             <Loader2 className="h-3.5 w-3.5 animate-spin" />
           ) : (
-            <>
+            <div className="flex items-center gap-1">
               <Video className="h-3.5 w-3.5" />
               Start Meeting
-            </>
+            </div>
           )}
         </Button>
       </div>
@@ -257,6 +267,9 @@ const ChannelMeetings: React.FC<ChannelMeetingsProps> = ({
                     : "participants"}{" "}
                   · In progress
                 </p>
+                {activeMeeting.ai_status && activeMeeting.ai_status !== "not_triggered" && (
+                  <AIStageTracker meeting={activeMeeting} />
+                )}
               </div>
 
               <Button
@@ -314,7 +327,7 @@ const ChannelMeetings: React.FC<ChannelMeetingsProps> = ({
                     )}
                   </p>
                 </div>
-                {/* AI stage badge */}
+                {/* AI stage badge + task invalidation on completion */}
                 <AIStageTracker meeting={m} />
               </div>
             </div>

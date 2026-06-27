@@ -314,6 +314,7 @@ const AddMemberDialog = ({
           <Button
             onClick={handleAdd}
             disabled={adding || selectedIds.length === 0}
+            className="p-2"
           >
             {adding ? (
               <>
@@ -613,16 +614,16 @@ const ManageWorkspaceMembers = (): JSX.Element => {
                             <Button
                               variant="outline"
                               size="sm"
-                              className="gap-1.5 h-8 text-xs"
+                              className="gap-1.5 h-8 text-xs "
                               disabled={isUpdating}
                             >
                               {isUpdating ? (
                                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
                               ) : (
-                                <>
-                                  Change Role
+                                <div className="flex items-center gap-1">
+                                  <span>Change Role</span>
                                   <ChevronDown className="h-3 w-3" />
-                                </>
+                                </div>
                               )}
                             </Button>
                           </DropdownMenuTrigger>
@@ -671,10 +672,10 @@ const ManageWorkspaceMembers = (): JSX.Element => {
                           {isRemoving ? (
                             <Loader2 className="h-3.5 w-3.5 animate-spin" />
                           ) : (
-                            <>
+                            <div className="flex items-center gap-1">
                               <UserMinus className="h-3.5 w-3.5 mr-1" />
                               Remove
-                            </>
+                            </div>
                           )}
                         </Button>
                       )}
