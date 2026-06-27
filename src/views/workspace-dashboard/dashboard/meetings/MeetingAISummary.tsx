@@ -140,8 +140,10 @@ export default function MeetingAISummary() {
               onClick={copySummaryToClipboard}
               className="gap-2"
             >
-              <Copy className="h-4 w-4" />
-              Copy Summary
+              <div className="flex items-center gap-2">
+                <Copy className="h-4 w-4" />
+                Copy Summary
+              </div>
             </Button>
             <Button
               size="sm"
@@ -149,8 +151,10 @@ export default function MeetingAISummary() {
               onClick={downloadSummary}
               className="gap-2"
             >
-              <Download className="h-4 w-4" />
-              Download .txt
+              <div className="flex items-center gap-2">
+                <Download className="h-4 w-4" />
+                Download .txt
+              </div>
             </Button>
           </div>
         </div>

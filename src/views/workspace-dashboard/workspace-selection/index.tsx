@@ -228,7 +228,7 @@ const WorkspaceCard = ({
         </div>
 
         {/* Stats */}
-        <div className="flex items-center gap-4 pt-1 border-t border-secondary-100 dark:border-secondary-700">
+        {/* <div className="flex items-center gap-4 pt-1 border-t border-secondary-100 dark:border-secondary-700">
           <div className="flex items-center gap-1.5">
             <Users className="h-3.5 w-3.5 text-secondary-400" />
             <span
@@ -251,7 +251,7 @@ const WorkspaceCard = ({
               {workspace.channel_count ?? 0} channels
             </span>
           </div>
-        </div>
+        </div> */}
 
         {/* Open indicator */}
         {workspace.is_active && (

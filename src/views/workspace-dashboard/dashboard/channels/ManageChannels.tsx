@@ -206,7 +206,7 @@ const ManageChannels = (): JSX.Element => {
                   {ch.description ?? "No description."}
                 </p>
 
-                <div className="flex items-center justify-between mt-auto pt-2 border-t border-secondary-100 dark:border-secondary-700">
+                {/* <div className="flex items-center justify-between mt-auto pt-2 border-t border-secondary-100 dark:border-secondary-700">
                   <div className="flex items-center gap-1.5 text-secondary-400">
                     <Users className="h-3.5 w-3.5" />
                     <span className={typography.regular12}>
@@ -226,7 +226,7 @@ const ManageChannels = (): JSX.Element => {
                       })}
                     </span>
                   )}
-                </div>
+                </div> */}
               </button>
             ))}
           </div>
